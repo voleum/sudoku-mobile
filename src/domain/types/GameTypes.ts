@@ -7,10 +7,24 @@ export interface CellPosition {
   col: number;
 }
 
+export interface SudokuPuzzle {
+  id: string;
+  seed: number;
+  difficulty: DifficultyLevel;
+  grid: SudokuGrid;
+  solution: SudokuGrid;
+  hints: number;
+  estimatedTime: number;
+  techniques: string[];
+  createdAt: Date;
+}
+
 export interface GameEntity {
   id: string;
+  puzzleId: string;
   grid: SudokuGrid;
   originalGrid: SudokuGrid;
+  solution: SudokuGrid;
   difficulty: DifficultyLevel;
   startTime: Date;
   currentTime: number;
