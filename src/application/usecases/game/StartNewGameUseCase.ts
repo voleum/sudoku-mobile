@@ -69,7 +69,8 @@ export class StartNewGameUseCase {
     // Cryptographically secure game ID generation for React Native/mobile environments
     // Uses multiple entropy sources instead of Math.random()
     const timestamp = Date.now();
-    const performanceNow = typeof performance !== 'undefined' ? performance.now() : 0;
+    const performanceNow = typeof (globalThis as any).performance !== 'undefined' ?
+      (globalThis as any).performance.now() : 0;
 
     // Generate entropy from multiple time-based sources
     const entropy1 = (timestamp * 1103515245 + 12345) & 0xFFFFFFFF;

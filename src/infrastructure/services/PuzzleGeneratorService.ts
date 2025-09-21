@@ -231,9 +231,11 @@ export class PuzzleGeneratorService implements IPuzzleGenerator {
     // For React Native/mobile environments, use cryptographically secure seed generation
     // Combine multiple entropy sources without relying on Math.random()
     const now = Date.now();
-    const performanceNow = typeof performance !== 'undefined' ? performance.now() : 0;
-    const memoryEntropy = typeof process !== 'undefined' && process.memoryUsage ?
-      process.memoryUsage().heapUsed : 0;
+    const performanceNow = typeof (globalThis as any).performance !== 'undefined' ?
+      (globalThis as any).performance.now() : 0;
+    const memoryEntropy = typeof (globalThis as any).process !== 'undefined' &&
+      (globalThis as any).process.memoryUsage ?
+      (globalThis as any).process.memoryUsage().heapUsed : 0;
 
     // Use high-resolution time differences for additional entropy
     const entropyArray = new Uint32Array(4);
@@ -256,7 +258,8 @@ export class PuzzleGeneratorService implements IPuzzleGenerator {
     // Cryptographically secure UUID generation for React Native/mobile environments
     // Uses multiple entropy sources instead of Math.random()
     const timestamp = Date.now();
-    const performanceNow = typeof performance !== 'undefined' ? performance.now() : 0;
+    const performanceNow = typeof (globalThis as any).performance !== 'undefined' ?
+      (globalThis as any).performance.now() : 0;
     let entropyIndex = 0;
 
     // Generate entropy array from multiple sources
