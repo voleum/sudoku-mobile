@@ -1,4 +1,5 @@
 import { SudokuGrid, CellValue, DifficultyLevel } from '../types/GameTypes';
+import { QUALITY_VALIDATION } from '../../shared/constants/GameConstants';
 
 export class SudokuRules {
   static readonly GRID_SIZE = 9;
@@ -159,14 +160,8 @@ export class SudokuRules {
     return grid.map(row => [...row]);
   }
 
-  static shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }
+  // Removed unused shuffleArray method that used Math.random()
+  // PuzzleGeneratorService has its own crypto-secure shuffleArray implementation
 
   // Quality validation functions according to business requirements
 
@@ -244,7 +239,7 @@ export class SudokuRules {
     const maxCount = Math.max(...counts);
 
     // Distribution is balanced if difference between max and min is not too large
-    return (maxCount - minCount) <= 3;
+    return (maxCount - minCount) <= QUALITY_VALIDATION.MAX_DISTRIBUTION_DIFFERENCE;
   }
 
   // Helper methods for technique analysis
@@ -289,7 +284,7 @@ export class SudokuRules {
         }
       }
     }
-    return pairCandidates >= 4; // Heuristic: likely to have naked pairs
+    return pairCandidates >= QUALITY_VALIDATION.NAKED_PAIRS_THRESHOLD;
   }
 
   private static hasHiddenPairs(grid: SudokuGrid): boolean {
@@ -305,7 +300,7 @@ export class SudokuRules {
         }
       }
     }
-    return constrainedCells >= 15; // Heuristic for hidden pair potential
+    return constrainedCells >= QUALITY_VALIDATION.CONSTRAINED_CELLS_THRESHOLD;
   }
 
   private static hasHiddenSingleInRow(grid: SudokuGrid, row: number): boolean {

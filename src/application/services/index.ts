@@ -1,2 +1,2 @@
-export { SudokuGeneratorService } from './SudokuGeneratorService';
-export type { ISudokuGeneratorService } from './SudokuGeneratorService';
+// Application services index - currently empty
+// Services have been moved to infrastructure layer following Clean Architecture

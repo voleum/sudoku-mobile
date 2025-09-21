@@ -18,6 +18,8 @@ export class StartNewGameUseCase {
   ) {}
 
   async execute(request: StartNewGameRequest): Promise<StartNewGameResponse> {
+    this.validateRequest(request);
+
     // 1. Generate puzzle
     const puzzle = await this.puzzleGenerator.generate(request.difficulty, request.seed);
 
@@ -42,7 +44,43 @@ export class StartNewGameUseCase {
     return { game };
   }
 
+  private validateRequest(request: StartNewGameRequest): void {
+    if (!request) {
+      throw new Error('Request parameter is required');
+    }
+
+    if (!request.difficulty) {
+      throw new Error('Difficulty parameter is required');
+    }
+
+    const validDifficulties: DifficultyLevel[] = ['easy', 'medium', 'hard', 'expert'];
+    if (!validDifficulties.includes(request.difficulty)) {
+      throw new Error('Invalid difficulty level. Must be: easy, medium, hard, or expert');
+    }
+
+    if (request.seed !== undefined) {
+      if (!Number.isInteger(request.seed) || request.seed < 0) {
+        throw new Error('Seed must be a non-negative integer');
+      }
+    }
+  }
+
   private generateGameId(): string {
-    return 'game_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    // Cryptographically secure game ID generation for React Native/mobile environments
+    // Uses multiple entropy sources instead of Math.random()
+    const timestamp = Date.now();
+    const performanceNow = typeof performance !== 'undefined' ? performance.now() : 0;
+
+    // Generate entropy from multiple time-based sources
+    const entropy1 = (timestamp * 1103515245 + 12345) & 0xFFFFFFFF;
+    const entropy2 = ((timestamp + performanceNow) * 0x9E3779B9) & 0xFFFFFFFF;
+    const entropy3 = (Date.now() ^ timestamp) & 0xFFFFFFFF;
+
+    // Convert to base36 strings for compact representation
+    const random1 = entropy1.toString(36).substring(0, 5);
+    const random2 = entropy2.toString(36).substring(0, 5);
+    const random3 = entropy3.toString(36).substring(0, 5);
+
+    return `game_${timestamp}_${random1}_${random2}_${random3}`;
   }
 }

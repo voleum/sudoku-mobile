@@ -1,37 +1,45 @@
-import { SudokuGeneratorService } from '../src/application/services/SudokuGeneratorService';
+import { PuzzleGeneratorService } from '../src/infrastructure/services/PuzzleGeneratorService';
 import { SudokuRules } from '../src/domain/rules/SudokuRules';
 import { DifficultyLevel, SudokuGrid } from '../src/domain/types/GameTypes';
 
-describe('SudokuGeneratorService', () => {
-  let generator: SudokuGeneratorService;
+describe('PuzzleGeneratorService', () => {
+  let generator: PuzzleGeneratorService;
 
   beforeEach(() => {
-    generator = SudokuGeneratorService.getInstance();
+    generator = PuzzleGeneratorService.getInstance();
   });
 
   test('should be a singleton', () => {
-    const generator1 = SudokuGeneratorService.getInstance();
-    const generator2 = SudokuGeneratorService.getInstance();
+    const generator1 = PuzzleGeneratorService.getInstance();
+    const generator2 = PuzzleGeneratorService.getInstance();
     expect(generator1).toBe(generator2);
   });
 
-  describe('generatePuzzle', () => {
+  describe('generate', () => {
     const difficulties: DifficultyLevel[] = ['easy', 'medium', 'hard', 'expert'];
 
     difficulties.forEach(difficulty => {
       test(`should generate valid ${difficulty} puzzle`, async () => {
-        const puzzle = await generator.generatePuzzle(difficulty);
+        const puzzle = await generator.generate(difficulty);
 
         expect(puzzle).toBeDefined();
-        expect(puzzle.getDifficulty()).toBe(difficulty);
+        expect(puzzle.difficulty).toBe(difficulty);
+        expect(puzzle.id).toBeDefined();
+        expect(puzzle.seed).toBeDefined();
 
-        const grid = puzzle.getGrid();
-        const solution = puzzle.getSolution();
+        expect(SudokuRules.isValidGrid(puzzle.grid)).toBe(true);
+        expect(SudokuRules.isCompleteGrid(puzzle.solution)).toBe(true);
 
-        expect(SudokuRules.isValidGrid(grid)).toBe(true);
-        expect(SudokuRules.isCompleteGrid(solution)).toBe(true);
-
-        expect(puzzle.getEmptyCellsCount()).toBeGreaterThan(0);
+        // Count empty cells
+        let emptyCells = 0;
+        for (let row = 0; row < 9; row++) {
+          for (let col = 0; col < 9; col++) {
+            if (puzzle.grid[row][col] === 0) {
+              emptyCells++;
+            }
+          }
+        }
+        expect(emptyCells).toBeGreaterThan(0);
       });
     });
   });
@@ -78,8 +86,8 @@ describe('SudokuGeneratorService', () => {
 
   describe('isUniqueSolution', () => {
     test('should detect unique solution', async () => {
-      const puzzle = await generator.generatePuzzle('easy');
-      const grid = puzzle.getGrid();
+      const puzzle = await generator.generate('easy');
+      const grid = puzzle.grid;
 
       expect(generator.isUniqueSolution(grid)).toBe(true);
     });
