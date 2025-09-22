@@ -5,6 +5,7 @@ export interface SolverResult {
   solvable: boolean;
   uniqueSolution: boolean;
   solutionsCount: number;
+  timedOut: boolean;
   performanceMetrics: SolverPerformanceMetrics;
 }
 
@@ -23,6 +24,7 @@ export interface HintResult {
   technique: string;
   explanation: string;
   difficulty: 'basic' | 'intermediate' | 'advanced';
+  confidence: number; // 0-1 scale, consistent with NextMoveResult
 }
 
 export interface TechniqueAnalysis {
@@ -45,9 +47,10 @@ export interface ISudokuSolver {
   /**
    * Solves a Sudoku puzzle using constraint propagation with backtracking fallback
    * @param grid - The Sudoku grid to solve
+   * @param timeoutMs - Optional timeout in milliseconds (default: 30000ms)
    * @returns Solution result with performance metrics
    */
-  solve(grid: SudokuGrid): SolverResult;
+  solve(grid: SudokuGrid, timeoutMs?: number): SolverResult;
 
   /**
    * Checks if a puzzle has a unique solution

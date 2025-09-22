@@ -15,6 +15,7 @@ declare const performance: { now(): number } | undefined;
 
 export class SudokuSolverService implements ISudokuSolver {
   private static instance: SudokuSolverService;
+  private uniquenessCache: Map<string, boolean> = new Map();
 
   public static getInstance(): SudokuSolverService {
     if (!SudokuSolverService.instance) {
@@ -23,7 +24,7 @@ export class SudokuSolverService implements ISudokuSolver {
     return SudokuSolverService.instance;
   }
 
-  solve(grid: SudokuGrid): SolverResult {
+  solve(grid: SudokuGrid, timeoutMs: number = 30000): SolverResult {
     const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
     const workingGrid = SudokuRules.copyGrid(grid);
 
@@ -35,6 +36,7 @@ export class SudokuSolverService implements ISudokuSolver {
         solvable: false,
         uniqueSolution: false,
         solutionsCount: 0,
+        timedOut: false,
         performanceMetrics: {
           solvingTimeMs: endTime - startTime,
           constraintPropagationSteps: 0,
@@ -64,8 +66,9 @@ export class SudokuSolverService implements ISudokuSolver {
       solvable = true;
       solution = workingGrid;
     } else if (propagationResult.isValid) {
-      // Phase 2: Backtracking fallback
-      const backtrackResult = this.backtrackingSolver(workingGrid, metrics, 0);
+      // Phase 2: Backtracking fallback with timeout
+      const timeoutTime = startTime + timeoutMs;
+      const backtrackResult = this.backtrackingSolver(workingGrid, metrics, 0, timeoutTime);
       solvable = backtrackResult;
       solution = solvable ? workingGrid : null;
     }
@@ -73,22 +76,46 @@ export class SudokuSolverService implements ISudokuSolver {
     const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
     metrics.solvingTimeMs = endTime - startTime;
 
-    // Check solution uniqueness
-    const uniqueSolution = solvable ? this.hasUniqueSolution(grid) : false;
-    const solutionsCount = solvable ? (uniqueSolution ? 1 : this.countSolutions(grid, 2)) : 0;
+    // Check if timed out
+    const timedOut = metrics.solvingTimeMs >= timeoutMs;
+
+    // Check solution uniqueness (skip if timed out)
+    const uniqueSolution = solvable && !timedOut ? this.hasUniqueSolution(grid) : false;
+    const solutionsCount = solvable && !timedOut ? (uniqueSolution ? 1 : this.countSolutions(grid, 2)) : 0;
 
     return {
       solution,
       solvable,
       uniqueSolution,
       solutionsCount,
+      timedOut,
       performanceMetrics: metrics
     };
   }
 
   hasUniqueSolution(grid: SudokuGrid): boolean {
+    // Check cache first
+    const cacheKey = this.generateGridCacheKey(grid);
+    if (this.uniquenessCache.has(cacheKey)) {
+      return this.uniquenessCache.get(cacheKey)!;
+    }
+
+    // Calculate uniqueness
     const solutions = this.findAllSolutions(grid, 2);
-    return solutions.length === 1;
+    const isUnique = solutions.length === 1;
+
+    // Cache the result
+    this.uniquenessCache.set(cacheKey, isUnique);
+
+    // Limit cache size to prevent memory leaks
+    if (this.uniquenessCache.size > 1000) {
+      const firstKey = this.uniquenessCache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.uniquenessCache.delete(firstKey);
+      }
+    }
+
+    return isUnique;
   }
 
   findAllSolutions(grid: SudokuGrid, maxSolutions: number = 10): SudokuGrid[] {
@@ -232,9 +259,17 @@ export class SudokuSolverService implements ISudokuSolver {
     return true;
   }
 
-  private backtrackingSolver(grid: SudokuGrid, metrics: SolverPerformanceMetrics, depth: number): boolean {
+  private backtrackingSolver(grid: SudokuGrid, metrics: SolverPerformanceMetrics, depth: number, timeoutTime?: number): boolean {
     metrics.maxDepthReached = Math.max(metrics.maxDepthReached, depth);
     metrics.nodesExplored++;
+
+    // Check timeout if provided
+    if (timeoutTime) {
+      const currentTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      if (currentTime >= timeoutTime) {
+        return false; // Timeout reached
+      }
+    }
 
     const emptyCell = this.findBestEmptyCell(grid);
 
@@ -249,7 +284,7 @@ export class SudokuSolverService implements ISudokuSolver {
       metrics.backtrackingSteps++;
       grid[row][col] = value;
 
-      if (this.backtrackingSolver(grid, metrics, depth + 1)) {
+      if (this.backtrackingSolver(grid, metrics, depth + 1, timeoutTime)) {
         return true;
       }
 
@@ -262,20 +297,36 @@ export class SudokuSolverService implements ISudokuSolver {
   private findBestEmptyCell(grid: SudokuGrid): CellPosition | null {
     let bestCell: CellPosition | null = null;
     let minPossibilities = SUDOKU_RULES.GRID_SIZE + 1;
+    let maxDegree = -1; // For tie-breaking: choose cell that constrains most neighbors
 
     for (let row = 0; row < SUDOKU_RULES.GRID_SIZE; row++) {
       for (let col = 0; col < SUDOKU_RULES.GRID_SIZE; col++) {
         if (grid[row][col] === SUDOKU_RULES.EMPTY_CELL) {
           const possibilities = SudokuRules.getPossibleValues(grid, row, col).length;
 
+          // Skip cells with no possibilities (invalid state)
+          if (possibilities === 0) {
+            continue;
+          }
+
+          // If we find a cell with only one possibility, return it immediately (naked single)
+          if (possibilities === 1) {
+            return { row, col };
+          }
+
+          // MRV heuristic: prefer cells with fewer possibilities
           if (possibilities < minPossibilities) {
             minPossibilities = possibilities;
             bestCell = { row, col };
+            maxDegree = this.calculateCellDegree(grid, row, col);
           }
-
-          // If we find a cell with only one possibility, return it immediately
-          if (possibilities === 1) {
-            return bestCell;
+          // Tie-breaking with degree heuristic: prefer cells that constrain more neighbors
+          else if (possibilities === minPossibilities && bestCell) {
+            const degree = this.calculateCellDegree(grid, row, col);
+            if (degree > maxDegree) {
+              bestCell = { row, col };
+              maxDegree = degree;
+            }
           }
         }
       }
@@ -366,7 +417,8 @@ export class SudokuSolverService implements ISudokuSolver {
         value: nextMove.value,
         technique: nextMove.technique,
         explanation: nextMove.explanation,
-        difficulty: this.getTechniqueDifficulty(nextMove.technique)
+        difficulty: this.getTechniqueDifficulty(nextMove.technique),
+        confidence: nextMove.confidence
       };
     }
 
@@ -380,7 +432,8 @@ export class SudokuSolverService implements ISudokuSolver {
           position: emptyCell,
           technique: 'Possible values',
           explanation: `Cell at row ${emptyCell.row + 1}, column ${emptyCell.col + 1} can contain: ${possibleValues.join(', ')}`,
-          difficulty: 'basic'
+          difficulty: 'basic',
+          confidence: 0.3 // Low confidence for basic possible values hint
         };
       }
     }
@@ -389,7 +442,8 @@ export class SudokuSolverService implements ISudokuSolver {
       hasHint: false,
       technique: 'No hint available',
       explanation: 'No obvious moves found. Try backtracking or check for errors.',
-      difficulty: 'basic'
+      difficulty: 'basic',
+      confidence: 0.0 // No confidence when no hint available
     };
   }
 
@@ -590,5 +644,44 @@ export class SudokuSolverService implements ISudokuSolver {
       }
     }
     return null;
+  }
+
+  private calculateCellDegree(grid: SudokuGrid, row: number, col: number): number {
+    // Calculate how many empty cells are in the same row, column, and box
+    // This helps choose cells that will constrain more neighbors when filled
+    let degree = 0;
+
+    // Count empty cells in the same row
+    for (let c = 0; c < SUDOKU_RULES.GRID_SIZE; c++) {
+      if (c !== col && grid[row][c] === SUDOKU_RULES.EMPTY_CELL) {
+        degree++;
+      }
+    }
+
+    // Count empty cells in the same column
+    for (let r = 0; r < SUDOKU_RULES.GRID_SIZE; r++) {
+      if (r !== row && grid[r][col] === SUDOKU_RULES.EMPTY_CELL) {
+        degree++;
+      }
+    }
+
+    // Count empty cells in the same box
+    const boxStartRow = Math.floor(row / SUDOKU_RULES.BOX_SIZE) * SUDOKU_RULES.BOX_SIZE;
+    const boxStartCol = Math.floor(col / SUDOKU_RULES.BOX_SIZE) * SUDOKU_RULES.BOX_SIZE;
+
+    for (let r = boxStartRow; r < boxStartRow + SUDOKU_RULES.BOX_SIZE; r++) {
+      for (let c = boxStartCol; c < boxStartCol + SUDOKU_RULES.BOX_SIZE; c++) {
+        if ((r !== row || c !== col) && grid[r][c] === SUDOKU_RULES.EMPTY_CELL) {
+          degree++;
+        }
+      }
+    }
+
+    return degree;
+  }
+
+  private generateGridCacheKey(grid: SudokuGrid): string {
+    // Create a string representation of the grid for caching
+    return grid.map(row => row.join('')).join('');
   }
 }
