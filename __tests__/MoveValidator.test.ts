@@ -156,6 +156,38 @@ describe('MoveValidator', () => {
     });
   });
 
+  describe('input validation', () => {
+    it('should throw error for invalid row index', () => {
+      expect(() => {
+        MoveValidator.validateMove(validGrid, originalGrid, -1, 0, 5);
+      }).toThrow('Invalid position: row=-1, col=0. Must be within 0-8');
+
+      expect(() => {
+        MoveValidator.validateMove(validGrid, originalGrid, 9, 0, 5);
+      }).toThrow('Invalid position: row=9, col=0. Must be within 0-8');
+    });
+
+    it('should throw error for invalid column index', () => {
+      expect(() => {
+        MoveValidator.validateMove(validGrid, originalGrid, 0, -1, 5);
+      }).toThrow('Invalid position: row=0, col=-1. Must be within 0-8');
+
+      expect(() => {
+        MoveValidator.validateMove(validGrid, originalGrid, 0, 9, 5);
+      }).toThrow('Invalid position: row=0, col=9. Must be within 0-8');
+    });
+
+    it('should accept valid positions', () => {
+      expect(() => {
+        MoveValidator.validateMove(validGrid, originalGrid, 0, 0, 5);
+      }).not.toThrow();
+
+      expect(() => {
+        MoveValidator.validateMove(validGrid, originalGrid, 8, 8, 5);
+      }).not.toThrow();
+    });
+  });
+
   describe('validation modes', () => {
     it('should validate immediately in immediate mode', () => {
       const result = MoveValidator.validateMove(
