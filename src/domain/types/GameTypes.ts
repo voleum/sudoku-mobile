@@ -60,3 +60,25 @@ export interface GameSettings {
   highlightSameNumbers: boolean;
   highlightRowColumn: boolean;
 }
+
+export enum ErrorType {
+  ROW_DUPLICATE = 'row_duplicate',
+  COLUMN_DUPLICATE = 'column_duplicate',
+  BOX_DUPLICATE = 'box_duplicate',
+  INVALID_NUMBER = 'invalid_number',
+  MODIFY_CLUE = 'modify_clue'
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  conflicts: CellPosition[];
+  errorType?: ErrorType;
+  affectedCells: CellPosition[];
+  errorMessage?: string;
+}
+
+export interface MoveValidationOptions {
+  allowErrors: boolean;
+  realTimeValidation: boolean;
+  strictMode: boolean;
+}

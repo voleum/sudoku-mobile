@@ -1,4 +1,4 @@
-import { SudokuGrid, CellValue, DifficultyLevel } from '../types/GameTypes';
+import { SudokuGrid, CellValue, DifficultyLevel, ValidationResult, ErrorType, CellPosition, MoveValidationOptions } from '../types/GameTypes';
 import { QUALITY_VALIDATION } from '../../shared/constants/GameConstants';
 
 export class SudokuRules {
@@ -348,5 +348,238 @@ export class SudokuRules {
       if (possiblePositions === 1) return true;
     }
     return false;
+  }
+}
+
+export class MoveValidator {
+  static validateMove(
+    grid: SudokuGrid,
+    originalGrid: SudokuGrid,
+    row: number,
+    col: number,
+    value: CellValue,
+    options: MoveValidationOptions = {
+      allowErrors: true,
+      realTimeValidation: true,
+      strictMode: false
+    }
+  ): ValidationResult {
+    const conflicts: CellPosition[] = [];
+    const affectedCells: CellPosition[] = [];
+    let errorType: ErrorType | undefined;
+    let errorMessage: string | undefined;
+
+    // Validation 1: Check if trying to modify a clue (original grid cell)
+    if (originalGrid[row][col] !== SudokuRules.EMPTY_CELL) {
+      return {
+        isValid: false,
+        conflicts: [{ row, col }],
+        errorType: ErrorType.MODIFY_CLUE,
+        affectedCells: [{ row, col }],
+        errorMessage: 'Cannot modify a given clue'
+      };
+    }
+
+    // Validation 2: Check if value is in valid range
+    if (value < 0 || value > 9) {
+      return {
+        isValid: false,
+        conflicts: [{ row, col }],
+        errorType: ErrorType.INVALID_NUMBER,
+        affectedCells: [{ row, col }],
+        errorMessage: 'Value must be between 1 and 9 or empty (0)'
+      };
+    }
+
+    // If clearing cell (value = 0), it's always valid
+    if (value === SudokuRules.EMPTY_CELL) {
+      return {
+        isValid: true,
+        conflicts: [],
+        affectedCells: [],
+      };
+    }
+
+    // Validation 3: Check row conflicts
+    const rowConflicts = this.findRowConflicts(grid, row, col, value);
+    if (rowConflicts.length > 0) {
+      conflicts.push(...rowConflicts);
+      affectedCells.push(...rowConflicts);
+      errorType = ErrorType.ROW_DUPLICATE;
+      errorMessage = `Number ${value} already exists in row ${row + 1}`;
+    }
+
+    // Validation 4: Check column conflicts
+    const colConflicts = this.findColumnConflicts(grid, row, col, value);
+    if (colConflicts.length > 0) {
+      conflicts.push(...colConflicts);
+      affectedCells.push(...colConflicts);
+      errorType = errorType || ErrorType.COLUMN_DUPLICATE;
+      if (!errorMessage) {
+        errorMessage = `Number ${value} already exists in column ${String.fromCharCode(65 + col)}`;
+      }
+    }
+
+    // Validation 5: Check box conflicts
+    const boxConflicts = this.findBoxConflicts(grid, row, col, value);
+    if (boxConflicts.length > 0) {
+      conflicts.push(...boxConflicts);
+      affectedCells.push(...boxConflicts);
+      errorType = errorType || ErrorType.BOX_DUPLICATE;
+      if (!errorMessage) {
+        const boxIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3);
+        errorMessage = `Number ${value} already exists in box ${boxIndex + 1}`;
+      }
+    }
+
+    // Add the target cell to affected cells if there are conflicts
+    if (conflicts.length > 0) {
+      affectedCells.push({ row, col });
+    }
+
+    // Remove duplicates before returning
+    const uniqueConflicts = this.removeDuplicatePositions(conflicts);
+    const uniqueAffectedCells = this.removeDuplicatePositions(affectedCells);
+
+    const isValid = uniqueConflicts.length === 0;
+
+    // In strict mode, block invalid moves
+    if (options.strictMode && !isValid) {
+      return {
+        isValid: false,
+        conflicts: uniqueConflicts,
+        errorType,
+        affectedCells: uniqueAffectedCells,
+        errorMessage
+      };
+    }
+
+    return {
+      isValid,
+      conflicts: uniqueConflicts,
+      errorType,
+      affectedCells: uniqueAffectedCells,
+      errorMessage
+    };
+  }
+
+  static validateCompleteGrid(grid: SudokuGrid): ValidationResult {
+    const conflicts: CellPosition[] = [];
+    const affectedCells: CellPosition[] = [];
+
+    // Check all cells for conflicts using the basic SudokuRules validation
+    for (let row = 0; row < SudokuRules.GRID_SIZE; row++) {
+      for (let col = 0; col < SudokuRules.GRID_SIZE; col++) {
+        const value = grid[row][col];
+        if (value !== SudokuRules.EMPTY_CELL) {
+          // Use SudokuRules validation which checks for placement validity
+          if (!SudokuRules.isValidPlacement(grid, row, col, value)) {
+            conflicts.push({ row, col });
+            affectedCells.push({ row, col });
+          }
+        }
+      }
+    }
+
+    // Remove duplicates
+    const uniqueConflicts = this.removeDuplicatePositions(conflicts);
+    const uniqueAffectedCells = this.removeDuplicatePositions(affectedCells);
+
+    return {
+      isValid: uniqueConflicts.length === 0,
+      conflicts: uniqueConflicts,
+      affectedCells: uniqueAffectedCells,
+      errorMessage: uniqueConflicts.length > 0 ? `Found ${uniqueConflicts.length} conflicting cells` : undefined
+    };
+  }
+
+  static findAllErrors(grid: SudokuGrid, _originalGrid: SudokuGrid): ValidationResult {
+    return this.validateCompleteGrid(grid);
+  }
+
+  private static findRowConflicts(grid: SudokuGrid, row: number, col: number, value: CellValue): CellPosition[] {
+    const conflicts: CellPosition[] = [];
+
+    for (let c = 0; c < SudokuRules.GRID_SIZE; c++) {
+      if (c !== col && grid[row][c] === value) {
+        conflicts.push({ row, col: c });
+      }
+    }
+
+    return conflicts;
+  }
+
+  private static findColumnConflicts(grid: SudokuGrid, row: number, col: number, value: CellValue): CellPosition[] {
+    const conflicts: CellPosition[] = [];
+
+    for (let r = 0; r < SudokuRules.GRID_SIZE; r++) {
+      if (r !== row && grid[r][col] === value) {
+        conflicts.push({ row: r, col });
+      }
+    }
+
+    return conflicts;
+  }
+
+  private static findBoxConflicts(grid: SudokuGrid, row: number, col: number, value: CellValue): CellPosition[] {
+    const conflicts: CellPosition[] = [];
+    const boxStartRow = Math.floor(row / SudokuRules.BOX_SIZE) * SudokuRules.BOX_SIZE;
+    const boxStartCol = Math.floor(col / SudokuRules.BOX_SIZE) * SudokuRules.BOX_SIZE;
+
+    for (let r = boxStartRow; r < boxStartRow + SudokuRules.BOX_SIZE; r++) {
+      for (let c = boxStartCol; c < boxStartCol + SudokuRules.BOX_SIZE; c++) {
+        if ((r !== row || c !== col) && grid[r][c] === value) {
+          conflicts.push({ row: r, col: c });
+        }
+      }
+    }
+
+    return conflicts;
+  }
+
+  private static removeDuplicatePositions(positions: CellPosition[]): CellPosition[] {
+    const seen = new Set<string>();
+    return positions.filter(pos => {
+      const key = `${pos.row}-${pos.col}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  }
+
+  static getBoxIndex(row: number, col: number): number {
+    return Math.floor(row / SudokuRules.BOX_SIZE) * 3 + Math.floor(col / SudokuRules.BOX_SIZE);
+  }
+
+  static getCellsInSameRow(row: number): CellPosition[] {
+    const cells: CellPosition[] = [];
+    for (let col = 0; col < SudokuRules.GRID_SIZE; col++) {
+      cells.push({ row, col });
+    }
+    return cells;
+  }
+
+  static getCellsInSameColumn(col: number): CellPosition[] {
+    const cells: CellPosition[] = [];
+    for (let row = 0; row < SudokuRules.GRID_SIZE; row++) {
+      cells.push({ row, col });
+    }
+    return cells;
+  }
+
+  static getCellsInSameBox(row: number, col: number): CellPosition[] {
+    const cells: CellPosition[] = [];
+    const boxStartRow = Math.floor(row / SudokuRules.BOX_SIZE) * SudokuRules.BOX_SIZE;
+    const boxStartCol = Math.floor(col / SudokuRules.BOX_SIZE) * SudokuRules.BOX_SIZE;
+
+    for (let r = boxStartRow; r < boxStartRow + SudokuRules.BOX_SIZE; r++) {
+      for (let c = boxStartCol; c < boxStartCol + SudokuRules.BOX_SIZE; c++) {
+        cells.push({ row: r, col: c });
+      }
+    }
+
+    return cells;
   }
 }
