@@ -35,7 +35,10 @@ export class StartNewGameUseCase {
       currentTime: 0,
       hintsUsed: 0,
       errorsCount: 0,
-      isCompleted: false
+      isCompleted: false,
+      hintUsageHistory: [],
+      directSolutionHintsUsed: 0,
+      playerProfile: undefined // Will be created when first hint is used
     };
 
     // 3. Save game
@@ -53,9 +56,9 @@ export class StartNewGameUseCase {
       throw new Error('Difficulty parameter is required');
     }
 
-    const validDifficulties: DifficultyLevel[] = ['easy', 'medium', 'hard', 'expert'];
+    const validDifficulties: DifficultyLevel[] = ['beginner', 'easy', 'medium', 'hard', 'expert'];
     if (!validDifficulties.includes(request.difficulty)) {
-      throw new Error('Invalid difficulty level. Must be: easy, medium, hard, or expert');
+      throw new Error('Invalid difficulty level. Must be: beginner, easy, medium, hard, or expert');
     }
 
     if (request.seed !== undefined) {

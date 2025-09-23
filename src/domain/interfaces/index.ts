@@ -8,3 +8,4 @@ export type {
   TechniqueAnalysis,
   NextMoveResult
 } from './ISudokuSolver';
+export type { IHintSystem } from './IHintSystem';
