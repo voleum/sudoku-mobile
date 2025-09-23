@@ -1,1 +1,1 @@
-export { SudokuRules } from './SudokuRules';
+export { SudokuRules, MoveValidator } from './SudokuRules';

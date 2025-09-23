@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { GameEntity, CellPosition, DifficultyLevel } from '@domain/types/GameTypes';
+import { MoveValidator } from '@domain/rules';
 
 interface GameStore {
   currentGame: GameEntity | null;
@@ -22,7 +23,7 @@ export const useGameStore = create<GameStore>()(
         },
 
         selectCell: (row, col) => {
-          set({ selectedCell: { row, col } });
+          set({ selectedCell: MoveValidator.createCellPosition(row, col) });
         },
       }),
       { name: 'sudoku-game-store' }

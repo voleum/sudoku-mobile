@@ -300,7 +300,7 @@ describe('SudokuSolverService', () => {
       const hint = solverService.getHint(puzzleWithNakedSingle);
 
       expect(hint.hasHint).toBe(true);
-      expect(hint.position).toEqual({ row: 8, col: 8 });
+      expect(hint.position).toEqual({ row: 8, col: 8, box: 8 });
       expect(hint.value).toBe(9);
       expect(hint.technique).toBe('Naked Singles');
       expect(hint.difficulty).toBe('basic');
@@ -343,7 +343,7 @@ describe('SudokuSolverService', () => {
       const nextMove = solverService.getNextMove(puzzleWithNakedSingle);
 
       expect(nextMove).not.toBeNull();
-      expect(nextMove!.position).toEqual({ row: 8, col: 8 });
+      expect(nextMove!.position).toEqual({ row: 8, col: 8, box: 8 });
       expect(nextMove!.value).toBe(9);
       expect(nextMove!.technique).toBe('Naked Singles');
       expect(nextMove!.confidence).toBe(1.0);

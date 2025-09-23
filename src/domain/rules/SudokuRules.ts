@@ -1,4 +1,4 @@
-import { SudokuGrid, CellValue, DifficultyLevel } from '../types/GameTypes';
+import { SudokuGrid, CellValue, DifficultyLevel, ValidationResult, ErrorType, CellPosition, MoveValidationOptions } from '../types/GameTypes';
 import { QUALITY_VALIDATION } from '../../shared/constants/GameConstants';
 
 export class SudokuRules {
@@ -75,13 +75,13 @@ export class SudokuRules {
     return true;
   }
 
-  static getEmptyCells(grid: SudokuGrid): Array<{ row: number; col: number }> {
-    const emptyCells: Array<{ row: number; col: number }> = [];
+  static getEmptyCells(grid: SudokuGrid): CellPosition[] {
+    const emptyCells: CellPosition[] = [];
 
     for (let row = 0; row < this.GRID_SIZE; row++) {
       for (let col = 0; col < this.GRID_SIZE; col++) {
         if (grid[row][col] === this.EMPTY_CELL) {
-          emptyCells.push({ row, col });
+          emptyCells.push(MoveValidator.createCellPosition(row, col));
         }
       }
     }
@@ -348,5 +348,345 @@ export class SudokuRules {
       if (possiblePositions === 1) return true;
     }
     return false;
+  }
+}
+
+export class MoveValidator {
+  private static readonly BOX_CACHE = new Map<string, number>();
+
+  /**
+   * Creates a CellPosition with cached box index calculation for performance optimization.
+   * Согласно бизнес-анализу 1.4, CellPosition должен содержать поле box (0-8).
+   *
+   * @param row - Row index (0-8)
+   * @param col - Column index (0-8)
+   * @returns CellPosition with row, col, and cached box index
+   */
+  static createCellPosition(row: number, col: number): CellPosition {
+    const key = `${row}-${col}`;
+    if (!this.BOX_CACHE.has(key)) {
+      this.BOX_CACHE.set(key, Math.floor(row / SudokuRules.BOX_SIZE) * 3 + Math.floor(col / SudokuRules.BOX_SIZE));
+    }
+
+    return {
+      row,
+      col,
+      box: this.BOX_CACHE.get(key)!
+    };
+  }
+  /**
+   * Validates a move according to Sudoku rules and configured validation mode.
+   * Соответствует требованиям F1.3: real-time проверка корректности ввода,
+   * highlight конфликтов, предотвращение некорректных ходов.
+   *
+   * @param grid - Current Sudoku grid state
+   * @param originalGrid - Original puzzle grid for clue validation
+   * @param row - Row index (0-8)
+   * @param col - Column index (0-8)
+   * @param value - Value to place (0-9, where 0 means clear cell)
+   * @param options - Validation options with mode (immediate/onComplete/manual)
+   * @returns Validation result with conflicts and error details
+   * @throws Error if position parameters are out of bounds
+   */
+  static validateMove(
+    grid: SudokuGrid,
+    originalGrid: SudokuGrid,
+    row: number,
+    col: number,
+    value: CellValue,
+    options: MoveValidationOptions = {
+      mode: 'immediate',
+      allowErrors: true,
+      strictMode: false
+    }
+  ): ValidationResult {
+    // Input validation for bounds checking
+    if (row < 0 || row >= SudokuRules.GRID_SIZE || col < 0 || col >= SudokuRules.GRID_SIZE) {
+      throw new Error(`Invalid position: row=${row}, col=${col}. Must be within 0-${SudokuRules.GRID_SIZE - 1}`);
+    }
+
+    const conflicts: CellPosition[] = [];
+    const affectedCells: CellPosition[] = [];
+    let errorType: ErrorType | undefined;
+    let errorMessage: string | undefined;
+
+    // Validation 1: Check if trying to modify a clue (original grid cell)
+    if (originalGrid[row][col] !== SudokuRules.EMPTY_CELL) {
+      return {
+        isValid: false,
+        conflicts: [MoveValidator.createCellPosition(row, col)],
+        errorType: ErrorType.MODIFY_CLUE,
+        affectedCells: [MoveValidator.createCellPosition(row, col)],
+        errorMessage: 'Cannot modify a given clue'
+      };
+    }
+
+    // Validation 2: Check if value is in valid range
+    if (value < 0 || value > 9) {
+      return {
+        isValid: false,
+        conflicts: [MoveValidator.createCellPosition(row, col)],
+        errorType: ErrorType.INVALID_NUMBER,
+        affectedCells: [MoveValidator.createCellPosition(row, col)],
+        errorMessage: 'Value must be between 1 and 9 or empty (0)'
+      };
+    }
+
+    // If clearing cell (value = 0), it's always valid
+    if (value === SudokuRules.EMPTY_CELL) {
+      return {
+        isValid: true,
+        conflicts: [],
+        affectedCells: [],
+      };
+    }
+
+    // Validation 3: Check row conflicts
+    const rowConflicts = MoveValidator.findRowConflicts(grid, row, col, value);
+    if (rowConflicts.length > 0) {
+      conflicts.push(...rowConflicts);
+      affectedCells.push(...rowConflicts);
+      errorType = ErrorType.ROW_DUPLICATE;
+      errorMessage = `Number ${value} already exists in row ${row + 1}`;
+    }
+
+    // Validation 4: Check column conflicts
+    const colConflicts = MoveValidator.findColumnConflicts(grid, row, col, value);
+    if (colConflicts.length > 0) {
+      conflicts.push(...colConflicts);
+      affectedCells.push(...colConflicts);
+      errorType = errorType || ErrorType.COLUMN_DUPLICATE;
+      if (!errorMessage) {
+        errorMessage = `Number ${value} already exists in column ${String.fromCharCode(65 + col)}`;
+      }
+    }
+
+    // Validation 5: Check box conflicts
+    const boxConflicts = MoveValidator.findBoxConflicts(grid, row, col, value);
+    if (boxConflicts.length > 0) {
+      conflicts.push(...boxConflicts);
+      affectedCells.push(...boxConflicts);
+      errorType = errorType || ErrorType.BOX_DUPLICATE;
+      if (!errorMessage) {
+        const boxIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3);
+        errorMessage = `Number ${value} already exists in box ${boxIndex + 1}`;
+      }
+    }
+
+    // Add the target cell to affected cells if there are conflicts
+    if (conflicts.length > 0) {
+      affectedCells.push(MoveValidator.createCellPosition(row, col));
+    }
+
+    // Remove duplicates before returning
+    const uniqueConflicts = MoveValidator.removeDuplicatePositions(conflicts);
+    const uniqueAffectedCells = MoveValidator.removeDuplicatePositions(affectedCells);
+
+    const isValid = uniqueConflicts.length === 0;
+
+    // Handle different validation modes
+    switch (options.mode) {
+      case 'immediate':
+        // Real-time validation - always return results
+        break;
+      case 'onComplete':
+        // Only validate when grid is complete
+        if (!SudokuRules.isCompleteGrid(grid)) {
+          return {
+            isValid: true,
+            conflicts: [],
+            affectedCells: [],
+          };
+        }
+        break;
+      case 'manual':
+        // Manual validation - only when explicitly requested
+        // This mode expects the caller to handle validation timing
+        break;
+    }
+
+    // In strict mode, block invalid moves
+    if (options.strictMode && !isValid) {
+      return {
+        isValid: false,
+        conflicts: uniqueConflicts,
+        errorType,
+        affectedCells: uniqueAffectedCells,
+        errorMessage
+      };
+    }
+
+    return {
+      isValid,
+      conflicts: uniqueConflicts,
+      errorType,
+      affectedCells: uniqueAffectedCells,
+      errorMessage
+    };
+  }
+
+  /**
+   * Validates the entire Sudoku grid for conflicts.
+   * Used for complete puzzle validation.
+   *
+   * @param grid - Complete or partial Sudoku grid
+   * @returns Validation result with all conflicts found
+   */
+  static validateCompleteGrid(grid: SudokuGrid): ValidationResult {
+    const conflicts: CellPosition[] = [];
+    const affectedCells: CellPosition[] = [];
+
+    // Check all cells for conflicts using the basic SudokuRules validation
+    for (let row = 0; row < SudokuRules.GRID_SIZE; row++) {
+      for (let col = 0; col < SudokuRules.GRID_SIZE; col++) {
+        const value = grid[row][col];
+        if (value !== SudokuRules.EMPTY_CELL) {
+          // Use SudokuRules validation which checks for placement validity
+          if (!SudokuRules.isValidPlacement(grid, row, col, value)) {
+            conflicts.push(MoveValidator.createCellPosition(row, col));
+            affectedCells.push(MoveValidator.createCellPosition(row, col));
+          }
+        }
+      }
+    }
+
+    // Remove duplicates
+    const uniqueConflicts = MoveValidator.removeDuplicatePositions(conflicts);
+    const uniqueAffectedCells = MoveValidator.removeDuplicatePositions(affectedCells);
+
+    return {
+      isValid: uniqueConflicts.length === 0,
+      conflicts: uniqueConflicts,
+      affectedCells: uniqueAffectedCells,
+      errorMessage: uniqueConflicts.length > 0 ? `Found ${uniqueConflicts.length} conflicting cells` : undefined
+    };
+  }
+
+  /**
+   * Finds all validation errors in a Sudoku grid.
+   * Alias for validateCompleteGrid for backward compatibility.
+   *
+   * @param grid - Sudoku grid to validate
+   * @param _originalGrid - Original grid (unused, for compatibility)
+   * @returns Validation result with all errors
+   */
+  static findAllErrors(grid: SudokuGrid, _originalGrid: SudokuGrid): ValidationResult {
+    return this.validateCompleteGrid(grid);
+  }
+
+  private static findRowConflicts(grid: SudokuGrid, row: number, col: number, value: CellValue): CellPosition[] {
+    const conflicts: CellPosition[] = [];
+
+    for (let c = 0; c < SudokuRules.GRID_SIZE; c++) {
+      if (c !== col && grid[row][c] === value) {
+        conflicts.push(MoveValidator.createCellPosition(row, c));
+      }
+    }
+
+    return conflicts;
+  }
+
+  private static findColumnConflicts(grid: SudokuGrid, row: number, col: number, value: CellValue): CellPosition[] {
+    const conflicts: CellPosition[] = [];
+
+    for (let r = 0; r < SudokuRules.GRID_SIZE; r++) {
+      if (r !== row && grid[r][col] === value) {
+        conflicts.push(MoveValidator.createCellPosition(r, col));
+      }
+    }
+
+    return conflicts;
+  }
+
+  private static findBoxConflicts(grid: SudokuGrid, row: number, col: number, value: CellValue): CellPosition[] {
+    const conflicts: CellPosition[] = [];
+    const boxStartRow = Math.floor(row / SudokuRules.BOX_SIZE) * SudokuRules.BOX_SIZE;
+    const boxStartCol = Math.floor(col / SudokuRules.BOX_SIZE) * SudokuRules.BOX_SIZE;
+
+    for (let r = boxStartRow; r < boxStartRow + SudokuRules.BOX_SIZE; r++) {
+      for (let c = boxStartCol; c < boxStartCol + SudokuRules.BOX_SIZE; c++) {
+        if ((r !== row || c !== col) && grid[r][c] === value) {
+          conflicts.push(MoveValidator.createCellPosition(r, c));
+        }
+      }
+    }
+
+    return conflicts;
+  }
+
+  private static removeDuplicatePositions(positions: CellPosition[]): CellPosition[] {
+    const seen = new Set<string>();
+    return positions.filter(pos => {
+      const key = `${pos.row}-${pos.col}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  }
+
+  /**
+   * Calculates the 3x3 box index for a given position.
+   * Согласно бизнес-анализу: box номер от 0 до 8.
+   *
+   * @param row - Row index (0-8)
+   * @param col - Column index (0-8)
+   * @returns Box index (0-8)
+   */
+  static getBoxIndex(row: number, col: number): number {
+    return Math.floor(row / SudokuRules.BOX_SIZE) * 3 + Math.floor(col / SudokuRules.BOX_SIZE);
+  }
+
+  /**
+   * Returns all cell positions in the same row.
+   * Used for highlight functionality and conflict detection.
+   *
+   * @param row - Target row index (0-8)
+   * @returns Array of all cell positions in the row
+   */
+  static getCellsInSameRow(row: number): CellPosition[] {
+    const cells: CellPosition[] = [];
+    for (let col = 0; col < SudokuRules.GRID_SIZE; col++) {
+      cells.push(MoveValidator.createCellPosition(row, col));
+    }
+    return cells;
+  }
+
+  /**
+   * Returns all cell positions in the same column.
+   * Used for highlight functionality and conflict detection.
+   *
+   * @param col - Target column index (0-8)
+   * @returns Array of all cell positions in the column
+   */
+  static getCellsInSameColumn(col: number): CellPosition[] {
+    const cells: CellPosition[] = [];
+    for (let row = 0; row < SudokuRules.GRID_SIZE; row++) {
+      cells.push(MoveValidator.createCellPosition(row, col));
+    }
+    return cells;
+  }
+
+  /**
+   * Returns all cell positions in the same 3x3 box.
+   * Used for highlight functionality and conflict detection.
+   *
+   * @param row - Row index to determine the box (0-8)
+   * @param col - Column index to determine the box (0-8)
+   * @returns Array of all cell positions in the box
+   */
+  static getCellsInSameBox(row: number, col: number): CellPosition[] {
+    const cells: CellPosition[] = [];
+    const boxStartRow = Math.floor(row / SudokuRules.BOX_SIZE) * SudokuRules.BOX_SIZE;
+    const boxStartCol = Math.floor(col / SudokuRules.BOX_SIZE) * SudokuRules.BOX_SIZE;
+
+    for (let r = boxStartRow; r < boxStartRow + SudokuRules.BOX_SIZE; r++) {
+      for (let c = boxStartCol; c < boxStartCol + SudokuRules.BOX_SIZE; c++) {
+        cells.push(MoveValidator.createCellPosition(r, c));
+      }
+    }
+
+    return cells;
   }
 }

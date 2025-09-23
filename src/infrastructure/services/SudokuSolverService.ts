@@ -7,7 +7,7 @@ import {
   NextMoveResult
 } from '../../domain/interfaces/ISudokuSolver';
 import { SudokuGrid, CellPosition, CellValue } from '../../domain/types/GameTypes';
-import { SudokuRules } from '../../domain/rules/SudokuRules';
+import { SudokuRules, MoveValidator } from '../../domain/rules/SudokuRules';
 import { SUDOKU_RULES } from '../../shared/constants/GameConstants';
 
 // Performance API compatibility for Node.js environments
@@ -311,20 +311,20 @@ export class SudokuSolverService implements ISudokuSolver {
 
           // If we find a cell with only one possibility, return it immediately (naked single)
           if (possibilities === 1) {
-            return { row, col };
+            return MoveValidator.createCellPosition(row, col);
           }
 
           // MRV heuristic: prefer cells with fewer possibilities
           if (possibilities < minPossibilities) {
             minPossibilities = possibilities;
-            bestCell = { row, col };
+            bestCell = MoveValidator.createCellPosition(row, col);
             maxDegree = this.calculateCellDegree(grid, row, col);
           }
           // Tie-breaking with degree heuristic: prefer cells that constrain more neighbors
           else if (possibilities === minPossibilities && bestCell) {
             const degree = this.calculateCellDegree(grid, row, col);
             if (degree > maxDegree) {
-              bestCell = { row, col };
+              bestCell = MoveValidator.createCellPosition(row, col);
               maxDegree = degree;
             }
           }
@@ -380,7 +380,7 @@ export class SudokuSolverService implements ISudokuSolver {
   private getRowCells(row: number): CellPosition[] {
     const cells: CellPosition[] = [];
     for (let col = 0; col < SUDOKU_RULES.GRID_SIZE; col++) {
-      cells.push({ row, col });
+      cells.push(MoveValidator.createCellPosition(row, col));
     }
     return cells;
   }
@@ -388,7 +388,7 @@ export class SudokuSolverService implements ISudokuSolver {
   private getColumnCells(col: number): CellPosition[] {
     const cells: CellPosition[] = [];
     for (let row = 0; row < SUDOKU_RULES.GRID_SIZE; row++) {
-      cells.push({ row, col });
+      cells.push(MoveValidator.createCellPosition(row, col));
     }
     return cells;
   }
@@ -400,7 +400,7 @@ export class SudokuSolverService implements ISudokuSolver {
 
     for (let row = startRow; row < startRow + SUDOKU_RULES.BOX_SIZE; row++) {
       for (let col = startCol; col < startCol + SUDOKU_RULES.BOX_SIZE; col++) {
-        cells.push({ row, col });
+        cells.push(MoveValidator.createCellPosition(row, col));
       }
     }
     return cells;
@@ -532,7 +532,7 @@ export class SudokuSolverService implements ISudokuSolver {
         if (grid[row][col] === SUDOKU_RULES.EMPTY_CELL) {
           const possibleValues = SudokuRules.getPossibleValues(grid, row, col);
           if (possibleValues.length === 1) {
-            positions.push({ row, col });
+            positions.push(MoveValidator.createCellPosition(row, col));
           }
         }
       }
@@ -548,7 +548,7 @@ export class SudokuSolverService implements ISudokuSolver {
           const possibleValues = SudokuRules.getPossibleValues(grid, row, col);
           if (possibleValues.length === 1) {
             return {
-              position: { row, col },
+              position: MoveValidator.createCellPosition(row, col),
               value: possibleValues[0]
             };
           }

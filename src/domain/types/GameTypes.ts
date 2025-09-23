@@ -3,8 +3,9 @@ export type SudokuGrid = CellValue[][];
 export type DifficultyLevel = 'easy' | 'medium' | 'hard' | 'expert';
 
 export interface CellPosition {
-  row: number;
-  col: number;
+  row: number;    // 0-8
+  col: number;    // 0-8
+  box: number;    // 0-8 (номер 3x3 квадрата)
 }
 
 export interface SudokuPuzzle {
@@ -59,4 +60,28 @@ export interface GameSettings {
   showErrors: boolean;
   highlightSameNumbers: boolean;
   highlightRowColumn: boolean;
+}
+
+export enum ErrorType {
+  ROW_DUPLICATE = 'row_duplicate',
+  COLUMN_DUPLICATE = 'column_duplicate',
+  BOX_DUPLICATE = 'box_duplicate',
+  INVALID_NUMBER = 'invalid_number',
+  MODIFY_CLUE = 'modify_clue'
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  conflicts: CellPosition[];
+  errorType?: ErrorType;
+  affectedCells: CellPosition[];
+  errorMessage?: string;
+}
+
+export type ValidationMode = 'immediate' | 'onComplete' | 'manual';
+
+export interface MoveValidationOptions {
+  mode: ValidationMode;
+  allowErrors: boolean;
+  strictMode: boolean;
 }
