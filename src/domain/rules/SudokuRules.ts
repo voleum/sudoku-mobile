@@ -75,13 +75,13 @@ export class SudokuRules {
     return true;
   }
 
-  static getEmptyCells(grid: SudokuGrid): Array<{ row: number; col: number }> {
-    const emptyCells: Array<{ row: number; col: number }> = [];
+  static getEmptyCells(grid: SudokuGrid): CellPosition[] {
+    const emptyCells: CellPosition[] = [];
 
     for (let row = 0; row < this.GRID_SIZE; row++) {
       for (let col = 0; col < this.GRID_SIZE; col++) {
         if (grid[row][col] === this.EMPTY_CELL) {
-          emptyCells.push({ row, col });
+          emptyCells.push(MoveValidator.createCellPosition(row, col));
         }
       }
     }
@@ -352,6 +352,13 @@ export class SudokuRules {
 }
 
 export class MoveValidator {
+  static createCellPosition(row: number, col: number): CellPosition {
+    return {
+      row,
+      col,
+      box: Math.floor(row / 3) * 3 + Math.floor(col / 3)
+    };
+  }
   static validateMove(
     grid: SudokuGrid,
     originalGrid: SudokuGrid,
@@ -359,8 +366,8 @@ export class MoveValidator {
     col: number,
     value: CellValue,
     options: MoveValidationOptions = {
+      mode: 'immediate',
       allowErrors: true,
-      realTimeValidation: true,
       strictMode: false
     }
   ): ValidationResult {
@@ -373,9 +380,9 @@ export class MoveValidator {
     if (originalGrid[row][col] !== SudokuRules.EMPTY_CELL) {
       return {
         isValid: false,
-        conflicts: [{ row, col }],
+        conflicts: [MoveValidator.createCellPosition(row, col)],
         errorType: ErrorType.MODIFY_CLUE,
-        affectedCells: [{ row, col }],
+        affectedCells: [MoveValidator.createCellPosition(row, col)],
         errorMessage: 'Cannot modify a given clue'
       };
     }
@@ -384,9 +391,9 @@ export class MoveValidator {
     if (value < 0 || value > 9) {
       return {
         isValid: false,
-        conflicts: [{ row, col }],
+        conflicts: [MoveValidator.createCellPosition(row, col)],
         errorType: ErrorType.INVALID_NUMBER,
-        affectedCells: [{ row, col }],
+        affectedCells: [MoveValidator.createCellPosition(row, col)],
         errorMessage: 'Value must be between 1 and 9 or empty (0)'
       };
     }
@@ -401,7 +408,7 @@ export class MoveValidator {
     }
 
     // Validation 3: Check row conflicts
-    const rowConflicts = this.findRowConflicts(grid, row, col, value);
+    const rowConflicts = MoveValidator.findRowConflicts(grid, row, col, value);
     if (rowConflicts.length > 0) {
       conflicts.push(...rowConflicts);
       affectedCells.push(...rowConflicts);
@@ -410,7 +417,7 @@ export class MoveValidator {
     }
 
     // Validation 4: Check column conflicts
-    const colConflicts = this.findColumnConflicts(grid, row, col, value);
+    const colConflicts = MoveValidator.findColumnConflicts(grid, row, col, value);
     if (colConflicts.length > 0) {
       conflicts.push(...colConflicts);
       affectedCells.push(...colConflicts);
@@ -421,7 +428,7 @@ export class MoveValidator {
     }
 
     // Validation 5: Check box conflicts
-    const boxConflicts = this.findBoxConflicts(grid, row, col, value);
+    const boxConflicts = MoveValidator.findBoxConflicts(grid, row, col, value);
     if (boxConflicts.length > 0) {
       conflicts.push(...boxConflicts);
       affectedCells.push(...boxConflicts);
@@ -434,14 +441,35 @@ export class MoveValidator {
 
     // Add the target cell to affected cells if there are conflicts
     if (conflicts.length > 0) {
-      affectedCells.push({ row, col });
+      affectedCells.push(MoveValidator.createCellPosition(row, col));
     }
 
     // Remove duplicates before returning
-    const uniqueConflicts = this.removeDuplicatePositions(conflicts);
-    const uniqueAffectedCells = this.removeDuplicatePositions(affectedCells);
+    const uniqueConflicts = MoveValidator.removeDuplicatePositions(conflicts);
+    const uniqueAffectedCells = MoveValidator.removeDuplicatePositions(affectedCells);
 
     const isValid = uniqueConflicts.length === 0;
+
+    // Handle different validation modes
+    switch (options.mode) {
+      case 'immediate':
+        // Real-time validation - always return results
+        break;
+      case 'onComplete':
+        // Only validate when grid is complete
+        if (!SudokuRules.isCompleteGrid(grid)) {
+          return {
+            isValid: true,
+            conflicts: [],
+            affectedCells: [],
+          };
+        }
+        break;
+      case 'manual':
+        // Manual validation - only when explicitly requested
+        // This mode expects the caller to handle validation timing
+        break;
+    }
 
     // In strict mode, block invalid moves
     if (options.strictMode && !isValid) {
@@ -474,16 +502,16 @@ export class MoveValidator {
         if (value !== SudokuRules.EMPTY_CELL) {
           // Use SudokuRules validation which checks for placement validity
           if (!SudokuRules.isValidPlacement(grid, row, col, value)) {
-            conflicts.push({ row, col });
-            affectedCells.push({ row, col });
+            conflicts.push(MoveValidator.createCellPosition(row, col));
+            affectedCells.push(MoveValidator.createCellPosition(row, col));
           }
         }
       }
     }
 
     // Remove duplicates
-    const uniqueConflicts = this.removeDuplicatePositions(conflicts);
-    const uniqueAffectedCells = this.removeDuplicatePositions(affectedCells);
+    const uniqueConflicts = MoveValidator.removeDuplicatePositions(conflicts);
+    const uniqueAffectedCells = MoveValidator.removeDuplicatePositions(affectedCells);
 
     return {
       isValid: uniqueConflicts.length === 0,
@@ -502,7 +530,7 @@ export class MoveValidator {
 
     for (let c = 0; c < SudokuRules.GRID_SIZE; c++) {
       if (c !== col && grid[row][c] === value) {
-        conflicts.push({ row, col: c });
+        conflicts.push(MoveValidator.createCellPosition(row, c));
       }
     }
 
@@ -514,7 +542,7 @@ export class MoveValidator {
 
     for (let r = 0; r < SudokuRules.GRID_SIZE; r++) {
       if (r !== row && grid[r][col] === value) {
-        conflicts.push({ row: r, col });
+        conflicts.push(MoveValidator.createCellPosition(r, col));
       }
     }
 
@@ -529,7 +557,7 @@ export class MoveValidator {
     for (let r = boxStartRow; r < boxStartRow + SudokuRules.BOX_SIZE; r++) {
       for (let c = boxStartCol; c < boxStartCol + SudokuRules.BOX_SIZE; c++) {
         if ((r !== row || c !== col) && grid[r][c] === value) {
-          conflicts.push({ row: r, col: c });
+          conflicts.push(MoveValidator.createCellPosition(r, c));
         }
       }
     }
@@ -553,10 +581,11 @@ export class MoveValidator {
     return Math.floor(row / SudokuRules.BOX_SIZE) * 3 + Math.floor(col / SudokuRules.BOX_SIZE);
   }
 
+
   static getCellsInSameRow(row: number): CellPosition[] {
     const cells: CellPosition[] = [];
     for (let col = 0; col < SudokuRules.GRID_SIZE; col++) {
-      cells.push({ row, col });
+      cells.push(MoveValidator.createCellPosition(row, col));
     }
     return cells;
   }
@@ -564,7 +593,7 @@ export class MoveValidator {
   static getCellsInSameColumn(col: number): CellPosition[] {
     const cells: CellPosition[] = [];
     for (let row = 0; row < SudokuRules.GRID_SIZE; row++) {
-      cells.push({ row, col });
+      cells.push(MoveValidator.createCellPosition(row, col));
     }
     return cells;
   }
@@ -576,7 +605,7 @@ export class MoveValidator {
 
     for (let r = boxStartRow; r < boxStartRow + SudokuRules.BOX_SIZE; r++) {
       for (let c = boxStartCol; c < boxStartCol + SudokuRules.BOX_SIZE; c++) {
-        cells.push({ row: r, col: c });
+        cells.push(MoveValidator.createCellPosition(r, c));
       }
     }
 

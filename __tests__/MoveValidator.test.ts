@@ -46,7 +46,7 @@ describe('MoveValidator', () => {
 
       expect(result.isValid).toBe(false);
       expect(result.conflicts).toHaveLength(1);
-      expect(result.conflicts[0]).toEqual({ row: 0, col: 0 });
+      expect(result.conflicts[0]).toEqual({ row: 0, col: 0, box: 0 });
       expect(result.errorType).toBe(ErrorType.ROW_DUPLICATE);
     });
 
@@ -55,7 +55,7 @@ describe('MoveValidator', () => {
 
       expect(result.isValid).toBe(false);
       expect(result.conflicts).toHaveLength(1);
-      expect(result.conflicts[0]).toEqual({ row: 2, col: 2 });
+      expect(result.conflicts[0]).toEqual({ row: 2, col: 2, box: 0 });
       expect(result.errorType).toBe(ErrorType.COLUMN_DUPLICATE);
     });
 
@@ -64,7 +64,7 @@ describe('MoveValidator', () => {
 
       expect(result.isValid).toBe(false);
       expect(result.conflicts).toHaveLength(1);
-      expect(result.conflicts[0]).toEqual({ row: 1, col: 0 });
+      expect(result.conflicts[0]).toEqual({ row: 1, col: 0, box: 0 });
       expect(result.errorType).toBe(ErrorType.BOX_DUPLICATE);
     });
 
@@ -135,24 +135,63 @@ describe('MoveValidator', () => {
       const cells = MoveValidator.getCellsInSameRow(0);
 
       expect(cells).toHaveLength(9);
-      expect(cells[0]).toEqual({ row: 0, col: 0 });
-      expect(cells[8]).toEqual({ row: 0, col: 8 });
+      expect(cells[0]).toEqual({ row: 0, col: 0, box: 0 });
+      expect(cells[8]).toEqual({ row: 0, col: 8, box: 2 });
     });
 
     it('should return cells in same column', () => {
       const cells = MoveValidator.getCellsInSameColumn(0);
 
       expect(cells).toHaveLength(9);
-      expect(cells[0]).toEqual({ row: 0, col: 0 });
-      expect(cells[8]).toEqual({ row: 8, col: 0 });
+      expect(cells[0]).toEqual({ row: 0, col: 0, box: 0 });
+      expect(cells[8]).toEqual({ row: 8, col: 0, box: 6 });
     });
 
     it('should return cells in same box', () => {
       const cells = MoveValidator.getCellsInSameBox(1, 1);
 
       expect(cells).toHaveLength(9);
-      expect(cells).toContainEqual({ row: 0, col: 0 });
-      expect(cells).toContainEqual({ row: 2, col: 2 });
+      expect(cells).toContainEqual({ row: 0, col: 0, box: 0 });
+      expect(cells).toContainEqual({ row: 2, col: 2, box: 0 });
+    });
+  });
+
+  describe('validation modes', () => {
+    it('should validate immediately in immediate mode', () => {
+      const result = MoveValidator.validateMove(
+        validGrid,
+        originalGrid,
+        0, 2, 5, // Invalid move
+        { mode: 'immediate', allowErrors: true, strictMode: false }
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.conflicts.length).toBeGreaterThan(0);
+    });
+
+    it('should not validate incomplete grid in onComplete mode', () => {
+      const result = MoveValidator.validateMove(
+        validGrid,
+        originalGrid,
+        0, 2, 5, // Invalid move
+        { mode: 'onComplete', allowErrors: true, strictMode: false }
+      );
+
+      // Should return valid because grid is not complete
+      expect(result.isValid).toBe(true);
+      expect(result.conflicts).toHaveLength(0);
+    });
+
+    it('should validate in manual mode', () => {
+      const result = MoveValidator.validateMove(
+        validGrid,
+        originalGrid,
+        0, 2, 5, // Invalid move
+        { mode: 'manual', allowErrors: true, strictMode: false }
+      );
+
+      expect(result.isValid).toBe(false);
+      expect(result.conflicts.length).toBeGreaterThan(0);
     });
   });
 
@@ -162,7 +201,7 @@ describe('MoveValidator', () => {
         validGrid,
         originalGrid,
         0, 2, 5,
-        { allowErrors: false, realTimeValidation: true, strictMode: true }
+        { mode: 'immediate', allowErrors: false, strictMode: true }
       );
 
       expect(result.isValid).toBe(false);
@@ -173,7 +212,7 @@ describe('MoveValidator', () => {
         validGrid,
         originalGrid,
         0, 2, 5,
-        { allowErrors: true, realTimeValidation: true, strictMode: false }
+        { mode: 'immediate', allowErrors: true, strictMode: false }
       );
 
       expect(result.isValid).toBe(false);
