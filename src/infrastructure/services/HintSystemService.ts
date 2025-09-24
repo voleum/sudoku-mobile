@@ -184,7 +184,7 @@ export class HintSystemService implements IHintSystem {
   private isHintAllowedForMedium(
     level: HintLevel,
     stats: ReturnType<typeof this.calculateUsageStats>,
-    currentUsage: GameHintUsage[]
+    _currentUsage: GameHintUsage[]
   ): boolean {
     // Technical Specification: 7 hints total, with Business Analysis structure
     if (stats.totalHints >= 7) return false;
@@ -201,7 +201,7 @@ export class HintSystemService implements IHintSystem {
   private isHintAllowedForHard(
     level: HintLevel,
     stats: ReturnType<typeof this.calculateUsageStats>,
-    currentUsage: GameHintUsage[]
+    _currentUsage: GameHintUsage[]
   ): boolean {
     // Technical Specification: 5 hints total, with strict educational limits
     if (stats.totalHints >= 5) return false;
