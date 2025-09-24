@@ -45,6 +45,17 @@ export const useGameStore = create<GameStore>()(
           // This will be implemented when dependency injection is set up
           console.log(`Hint requested for level ${level}`);
 
+          // Calculate rating penalty based on hint level according to Business Analysis (1.2-game-rules-gameplay.md:644-648)
+          const getRatingPenalty = (hintLevel: HintLevel): number => {
+            switch (hintLevel) {
+              case HintLevel.GENERAL_DIRECTION: return 5;    // Level 1: -5%
+              case HintLevel.SPECIFIC_TECHNIQUE: return 10;  // Level 2: -10%
+              case HintLevel.EXACT_LOCATION: return 20;      // Level 3: -20%
+              case HintLevel.DIRECT_SOLUTION: return 50;     // Level 4: -50%
+              default: return 5;
+            }
+          };
+
           // For now, set a placeholder hint
           const placeholderHint: HintResponse = {
             level,
@@ -53,7 +64,7 @@ export const useGameStore = create<GameStore>()(
             relatedCells: [],
             confidence: 0.5,
             colorHighlights: [],
-            ratingPenalty: 0 // Placeholder, no penalty for integration placeholder
+            ratingPenalty: getRatingPenalty(level)
           };
 
           set({

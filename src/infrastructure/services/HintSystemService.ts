@@ -1,5 +1,5 @@
 import { IHintSystem } from '../../domain/interfaces/IHintSystem';
-import { ISudokuSolver } from '../../domain/interfaces/ISudokuSolver';
+import { ISudokuSolver, HintResult } from '../../domain/interfaces/ISudokuSolver';
 import {
   HintRequest,
   HintResponse,
@@ -221,7 +221,7 @@ export class HintSystemService implements IHintSystem {
 
   private generateSpecificTechniqueHint(
     grid: SudokuGrid,
-    solverHint: any,
+    solverHint: HintResult,
     _techniques: string[]
   ): HintResponse {
     if (!solverHint.hasHint) {
@@ -274,7 +274,7 @@ export class HintSystemService implements IHintSystem {
     };
   }
 
-  private generateExactLocationHint(grid: SudokuGrid, solverHint: any): HintResponse {
+  private generateExactLocationHint(grid: SudokuGrid, solverHint: HintResult): HintResponse {
     if (!solverHint.hasHint || !solverHint.position) {
       return this.generateNoHintAvailable();
     }
@@ -310,7 +310,7 @@ export class HintSystemService implements IHintSystem {
     };
   }
 
-  private generateDirectSolutionHint(grid: SudokuGrid, solverHint: any): HintResponse {
+  private generateDirectSolutionHint(grid: SudokuGrid, solverHint: HintResult): HintResponse {
     if (!solverHint.hasHint || !solverHint.position || !solverHint.value) {
       return this.generateNoHintAvailable();
     }

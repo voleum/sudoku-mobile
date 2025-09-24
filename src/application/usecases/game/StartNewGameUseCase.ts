@@ -49,21 +49,21 @@ export class StartNewGameUseCase {
 
   private validateRequest(request: StartNewGameRequest): void {
     if (!request) {
-      throw new Error('Request parameter is required');
+      throw new Error('Параметр запроса обязателен');
     }
 
     if (!request.difficulty) {
-      throw new Error('Difficulty parameter is required');
+      throw new Error('Параметр сложности обязателен');
     }
 
     const validDifficulties: DifficultyLevel[] = ['beginner', 'easy', 'medium', 'hard', 'expert'];
     if (!validDifficulties.includes(request.difficulty)) {
-      throw new Error('Invalid difficulty level. Must be: beginner, easy, medium, hard, or expert');
+      throw new Error('Недопустимый уровень сложности. Возможные значения: beginner, easy, medium, hard, expert');
     }
 
     if (request.seed !== undefined) {
       if (!Number.isInteger(request.seed) || request.seed < 0) {
-        throw new Error('Seed must be a non-negative integer');
+        throw new Error('Параметр seed должен быть неотрицательным целым числом');
       }
     }
   }
