@@ -1,32 +1,94 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { GameEntity, CellPosition, DifficultyLevel } from '@domain/types/GameTypes';
+import { GameEntity, CellPosition, DifficultyLevel, HintLevel, HintResponse } from '@domain/types/GameTypes';
 import { MoveValidator } from '@domain/rules';
 
 interface GameStore {
   currentGame: GameEntity | null;
   selectedCell: CellPosition | null;
+  currentHint: HintResponse | null;
+  isHintActive: boolean;
 
   startNewGame: (difficulty: DifficultyLevel) => void;
   selectCell: (row: number, col: number) => void;
+  useHint: (level: HintLevel) => Promise<void>;
+  clearHint: () => void;
+  setCurrentGame: (game: GameEntity) => void;
 }
 
 export const useGameStore = create<GameStore>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         currentGame: null,
         selectedCell: null,
+        currentHint: null,
+        isHintActive: false,
 
         startNewGame: (difficulty) => {
           console.log('Start new game:', difficulty);
+          // Clear any active hints when starting new game
+          set({ currentHint: null, isHintActive: false });
         },
 
         selectCell: (row, col) => {
           set({ selectedCell: MoveValidator.createCellPosition(row, col) });
         },
+
+        useHint: async (level: HintLevel) => {
+          const { currentGame } = get();
+          if (!currentGame) {
+            throw new Error('No active game to provide hints for');
+          }
+
+          // TODO: Implement actual hint system integration
+          // This will be implemented when dependency injection is set up
+          console.log(`Hint requested for level ${level}`);
+
+          // Calculate rating penalty based on hint level according to Business Analysis (1.2-game-rules-gameplay.md:644-648)
+          const getRatingPenalty = (hintLevel: HintLevel): number => {
+            switch (hintLevel) {
+              case HintLevel.GENERAL_DIRECTION: return 5;    // Level 1: -5%
+              case HintLevel.SPECIFIC_TECHNIQUE: return 10;  // Level 2: -10%
+              case HintLevel.EXACT_LOCATION: return 20;      // Level 3: -20%
+              case HintLevel.DIRECT_SOLUTION: return 50;     // Level 4: -50%
+              default: return 5;
+            }
+          };
+
+          // For now, set a placeholder hint
+          const placeholderHint: HintResponse = {
+            level,
+            message: 'Hint system will be integrated with dependency injection',
+            targetCells: [],
+            relatedCells: [],
+            confidence: 0.5,
+            colorHighlights: [],
+            ratingPenalty: getRatingPenalty(level)
+          };
+
+          set({
+            currentHint: placeholderHint,
+            isHintActive: true
+          });
+        },
+
+        clearHint: () => {
+          set({ currentHint: null, isHintActive: false });
+        },
+
+        setCurrentGame: (game: GameEntity) => {
+          set({ currentGame: game });
+        },
       }),
-      { name: 'sudoku-game-store' }
+      {
+        name: 'sudoku-game-store',
+        // Don't persist hints as they are temporary
+        partialize: (state) => ({
+          currentGame: state.currentGame,
+          selectedCell: state.selectedCell
+        })
+      }
     )
   )
 );

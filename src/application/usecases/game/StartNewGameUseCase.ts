@@ -1,6 +1,11 @@
 import { GameEntity, DifficultyLevel } from '../../../domain/types/GameTypes';
 import { IPuzzleGenerator } from '../../../domain/interfaces/IPuzzleGenerator';
 import { IGameRepository } from '../../../domain/interfaces/IGameRepository';
+import {
+  MissingRequiredParameterError,
+  InvalidDifficultyError,
+  InvalidSeedError
+} from '../../../domain/errors';
 
 export interface StartNewGameRequest {
   difficulty: DifficultyLevel;
@@ -35,7 +40,10 @@ export class StartNewGameUseCase {
       currentTime: 0,
       hintsUsed: 0,
       errorsCount: 0,
-      isCompleted: false
+      isCompleted: false,
+      hintUsageHistory: [],
+      directSolutionHintsUsed: 0,
+      playerProfile: undefined // Will be created when first hint is used
     };
 
     // 3. Save game
@@ -46,21 +54,21 @@ export class StartNewGameUseCase {
 
   private validateRequest(request: StartNewGameRequest): void {
     if (!request) {
-      throw new Error('Request parameter is required');
+      throw new MissingRequiredParameterError('request');
     }
 
     if (!request.difficulty) {
-      throw new Error('Difficulty parameter is required');
+      throw new MissingRequiredParameterError('difficulty');
     }
 
-    const validDifficulties: DifficultyLevel[] = ['easy', 'medium', 'hard', 'expert'];
+    const validDifficulties: DifficultyLevel[] = ['beginner', 'easy', 'medium', 'hard', 'expert'];
     if (!validDifficulties.includes(request.difficulty)) {
-      throw new Error('Invalid difficulty level. Must be: easy, medium, hard, or expert');
+      throw new InvalidDifficultyError(request.difficulty);
     }
 
     if (request.seed !== undefined) {
       if (!Number.isInteger(request.seed) || request.seed < 0) {
-        throw new Error('Seed must be a non-negative integer');
+        throw new InvalidSeedError('Параметр seed должен быть неотрицательным целым числом');
       }
     }
   }
