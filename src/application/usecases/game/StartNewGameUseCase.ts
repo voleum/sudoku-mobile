@@ -1,6 +1,11 @@
 import { GameEntity, DifficultyLevel } from '../../../domain/types/GameTypes';
 import { IPuzzleGenerator } from '../../../domain/interfaces/IPuzzleGenerator';
 import { IGameRepository } from '../../../domain/interfaces/IGameRepository';
+import {
+  MissingRequiredParameterError,
+  InvalidDifficultyError,
+  InvalidSeedError
+} from '../../../domain/errors';
 
 export interface StartNewGameRequest {
   difficulty: DifficultyLevel;
@@ -49,21 +54,21 @@ export class StartNewGameUseCase {
 
   private validateRequest(request: StartNewGameRequest): void {
     if (!request) {
-      throw new Error('Параметр запроса обязателен');
+      throw new MissingRequiredParameterError('request');
     }
 
     if (!request.difficulty) {
-      throw new Error('Параметр сложности обязателен');
+      throw new MissingRequiredParameterError('difficulty');
     }
 
     const validDifficulties: DifficultyLevel[] = ['beginner', 'easy', 'medium', 'hard', 'expert'];
     if (!validDifficulties.includes(request.difficulty)) {
-      throw new Error('Недопустимый уровень сложности. Возможные значения: beginner, easy, medium, hard, expert');
+      throw new InvalidDifficultyError(request.difficulty);
     }
 
     if (request.seed !== undefined) {
       if (!Number.isInteger(request.seed) || request.seed < 0) {
-        throw new Error('Параметр seed должен быть неотрицательным целым числом');
+        throw new InvalidSeedError('Параметр seed должен быть неотрицательным целым числом');
       }
     }
   }

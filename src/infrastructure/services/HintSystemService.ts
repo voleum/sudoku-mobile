@@ -12,6 +12,12 @@ import {
   DifficultyLevel
 } from '../../domain/types/GameTypes';
 import { MoveValidator } from '../../domain/rules/SudokuRules';
+import {
+  DomainError,
+  InvalidHintLevelError,
+  UnknownError,
+  MissingRequiredParameterError
+} from '../../domain/errors';
 
 export class HintSystemService implements IHintSystem {
   private static readonly MAX_DIRECT_SOLUTION_HINTS = 3;
@@ -27,27 +33,40 @@ export class HintSystemService implements IHintSystem {
   constructor(private sudokuSolver: ISudokuSolver) {}
 
   async getHint(request: HintRequest): Promise<HintResponse> {
-    const complexity = this.calculateComplexity(request.grid);
-    const availableTechniques = await this.getAvailableTechniques(request.grid);
+    try {
+      // Validate input parameters
+      this.validateHintRequest(request);
 
-    // Get hint from solver first
-    const solverHint = this.sudokuSolver.getHint(request.grid);
+      const complexity = this.calculateComplexity(request.grid);
+      const availableTechniques = await this.getAvailableTechniques(request.grid);
 
-    switch (request.requestedLevel) {
-      case HintLevel.GENERAL_DIRECTION:
-        return this.generateGeneralDirectionHint(request.grid, availableTechniques, complexity);
+      // Get hint from solver first
+      const solverHint = this.sudokuSolver.getHint(request.grid);
 
-      case HintLevel.SPECIFIC_TECHNIQUE:
-        return this.generateSpecificTechniqueHint(request.grid, solverHint, availableTechniques);
+      switch (request.requestedLevel) {
+        case HintLevel.GENERAL_DIRECTION:
+          return this.generateGeneralDirectionHint(request.grid, availableTechniques, complexity);
 
-      case HintLevel.EXACT_LOCATION:
-        return this.generateExactLocationHint(request.grid, solverHint);
+        case HintLevel.SPECIFIC_TECHNIQUE:
+          return this.generateSpecificTechniqueHint(request.grid, solverHint, availableTechniques);
 
-      case HintLevel.DIRECT_SOLUTION:
-        return this.generateDirectSolutionHint(request.grid, solverHint);
+        case HintLevel.EXACT_LOCATION:
+          return this.generateExactLocationHint(request.grid, solverHint);
 
-      default:
-        throw new Error(`Unsupported hint level: ${request.requestedLevel}`);
+        case HintLevel.DIRECT_SOLUTION:
+          return this.generateDirectSolutionHint(request.grid, solverHint);
+
+        default:
+          throw new InvalidHintLevelError(request.requestedLevel.toString());
+      }
+    } catch (error) {
+      if (error instanceof DomainError) {
+        throw error;
+      }
+
+      // Log unexpected errors for debugging
+      console.error('Unexpected error in getHint:', error);
+      throw new UnknownError('Failed to generate hint due to unexpected error');
     }
   }
 
@@ -97,62 +116,110 @@ export class HintSystemService implements IHintSystem {
     // Business Analysis: detailed level restrictions with educational progression
     // Technical Specification: higher overall limits for better user experience
 
-    const currentLevelUsage = currentUsage.filter(usage => usage.level === level).length;
-    const directSolutionCount = currentUsage.filter(usage => usage.level === HintLevel.DIRECT_SOLUTION).length;
-    const totalHints = currentUsage.length;
+    const usageStats = this.calculateUsageStats(currentUsage, level);
 
     // Universal limit: Maximum 3 direct solution hints per game (Business Analysis)
-    if (level === HintLevel.DIRECT_SOLUTION && directSolutionCount >= HintSystemService.MAX_DIRECT_SOLUTION_HINTS) {
+    if (this.isDirectSolutionLimitExceeded(level, usageStats.directSolutionCount)) {
       return false;
     }
 
     // Hybrid difficulty-based limits
+    return this.isHintAllowedForDifficulty(level, difficulty, usageStats, currentUsage);
+  }
+
+  private calculateUsageStats(currentUsage: GameHintUsage[], level: HintLevel) {
+    return {
+      currentLevelUsage: currentUsage.filter(usage => usage.level === level).length,
+      directSolutionCount: currentUsage.filter(usage => usage.level === HintLevel.DIRECT_SOLUTION).length,
+      totalHints: currentUsage.length,
+      basicHintsCount: currentUsage.filter(u => u.level <= HintLevel.SPECIFIC_TECHNIQUE).length
+    };
+  }
+
+  private isDirectSolutionLimitExceeded(level: HintLevel, directSolutionCount: number): boolean {
+    return level === HintLevel.DIRECT_SOLUTION && directSolutionCount >= HintSystemService.MAX_DIRECT_SOLUTION_HINTS;
+  }
+
+  private isHintAllowedForDifficulty(
+    level: HintLevel,
+    difficulty: DifficultyLevel,
+    stats: ReturnType<typeof this.calculateUsageStats>,
+    currentUsage: GameHintUsage[]
+  ): boolean {
     switch (difficulty) {
       case 'beginner':
-        // Business Analysis: Unlimited level 1-2 hints for educational purposes
-        return level <= HintLevel.SPECIFIC_TECHNIQUE ||
-               (level === HintLevel.EXACT_LOCATION && currentLevelUsage < 5) ||
-               (level === HintLevel.DIRECT_SOLUTION && directSolutionCount < 3);
+        return this.isHintAllowedForBeginner(level, stats);
 
       case 'easy':
-        // Technical Specification: 10 hints total, but with educational progression
-        if (totalHints >= 10) return false;
-        // Allow more freedom for beginners while maintaining some structure
-        return level <= HintLevel.EXACT_LOCATION || directSolutionCount < 2;
+        return this.isHintAllowedForEasy(level, stats);
 
       case 'medium':
-        // Technical Specification: 7 hints total, with Business Analysis structure
-        if (totalHints >= 7) return false;
-        // Encourage learning: prefer lower level hints
-        if (level <= HintLevel.SPECIFIC_TECHNIQUE) {
-          return currentUsage.filter(u => u.level <= HintLevel.SPECIFIC_TECHNIQUE).length < 5;
-        } else if (level === HintLevel.EXACT_LOCATION) {
-          return currentLevelUsage < 2;
-        } else {
-          return directSolutionCount < 1;
-        }
+        return this.isHintAllowedForMedium(level, stats, currentUsage);
 
       case 'hard':
-        // Technical Specification: 5 hints total, with strict educational limits
-        if (totalHints >= 5) return false;
-        // Mostly level 1-2 hints to encourage skill development
-        if (level <= HintLevel.SPECIFIC_TECHNIQUE) {
-          return currentUsage.filter(u => u.level <= HintLevel.SPECIFIC_TECHNIQUE).length < 4;
-        } else if (level === HintLevel.EXACT_LOCATION) {
-          return currentLevelUsage < 1;
-        } else {
-          return false; // No direct solutions for hard difficulty
-        }
+        return this.isHintAllowedForHard(level, stats, currentUsage);
 
       case 'expert':
-        // Technical Specification: 3 hints total, with maximum restriction
-        if (totalHints >= 3) return false;
-        // Expert level: only general direction hints allowed
-        return level === HintLevel.GENERAL_DIRECTION && currentLevelUsage < 3;
+        return this.isHintAllowedForExpert(level, stats);
 
       default:
         return false;
     }
+  }
+
+  private isHintAllowedForBeginner(level: HintLevel, stats: ReturnType<typeof this.calculateUsageStats>): boolean {
+    // Business Analysis: Unlimited level 1-2 hints for educational purposes
+    return level <= HintLevel.SPECIFIC_TECHNIQUE ||
+           (level === HintLevel.EXACT_LOCATION && stats.currentLevelUsage < 5) ||
+           (level === HintLevel.DIRECT_SOLUTION && stats.directSolutionCount < 3);
+  }
+
+  private isHintAllowedForEasy(level: HintLevel, stats: ReturnType<typeof this.calculateUsageStats>): boolean {
+    // Technical Specification: 10 hints total, but with educational progression
+    if (stats.totalHints >= 10) return false;
+    // Allow more freedom for beginners while maintaining some structure
+    return level <= HintLevel.EXACT_LOCATION || stats.directSolutionCount < 2;
+  }
+
+  private isHintAllowedForMedium(
+    level: HintLevel,
+    stats: ReturnType<typeof this.calculateUsageStats>,
+    currentUsage: GameHintUsage[]
+  ): boolean {
+    // Technical Specification: 7 hints total, with Business Analysis structure
+    if (stats.totalHints >= 7) return false;
+    // Encourage learning: prefer lower level hints
+    if (level <= HintLevel.SPECIFIC_TECHNIQUE) {
+      return stats.basicHintsCount < 5;
+    } else if (level === HintLevel.EXACT_LOCATION) {
+      return stats.currentLevelUsage < 2;
+    } else {
+      return stats.directSolutionCount < 1;
+    }
+  }
+
+  private isHintAllowedForHard(
+    level: HintLevel,
+    stats: ReturnType<typeof this.calculateUsageStats>,
+    currentUsage: GameHintUsage[]
+  ): boolean {
+    // Technical Specification: 5 hints total, with strict educational limits
+    if (stats.totalHints >= 5) return false;
+    // Mostly level 1-2 hints to encourage skill development
+    if (level <= HintLevel.SPECIFIC_TECHNIQUE) {
+      return stats.basicHintsCount < 4;
+    } else if (level === HintLevel.EXACT_LOCATION) {
+      return stats.currentLevelUsage < 1;
+    } else {
+      return false; // No direct solutions for hard difficulty
+    }
+  }
+
+  private isHintAllowedForExpert(level: HintLevel, stats: ReturnType<typeof this.calculateUsageStats>): boolean {
+    // Technical Specification: 3 hints total, with maximum restriction
+    if (stats.totalHints >= 3) return false;
+    // Expert level: only general direction hints allowed
+    return level === HintLevel.GENERAL_DIRECTION && stats.currentLevelUsage < 3;
   }
 
   calculateComplexity(grid: SudokuGrid): number {
@@ -455,5 +522,40 @@ export class HintSystemService implements IHintSystem {
     }
 
     return maxDepth;
+  }
+
+  private validateHintRequest(request: HintRequest): void {
+    if (!request) {
+      throw new MissingRequiredParameterError('request');
+    }
+
+    if (!request.grid) {
+      throw new MissingRequiredParameterError('grid');
+    }
+
+    if (!request.difficulty) {
+      throw new MissingRequiredParameterError('difficulty');
+    }
+
+    if (request.requestedLevel === undefined || request.requestedLevel === null) {
+      throw new MissingRequiredParameterError('requestedLevel');
+    }
+
+    // Validate grid is 9x9
+    if (!Array.isArray(request.grid) || request.grid.length !== 9) {
+      throw new UnknownError('Grid must be a 9x9 array');
+    }
+
+    for (let i = 0; i < 9; i++) {
+      if (!Array.isArray(request.grid[i]) || request.grid[i].length !== 9) {
+        throw new UnknownError(`Grid row ${i} must be an array of 9 elements`);
+      }
+    }
+
+    // Validate hint level
+    const validLevels = Object.values(HintLevel);
+    if (!validLevels.includes(request.requestedLevel)) {
+      throw new InvalidHintLevelError(request.requestedLevel.toString());
+    }
   }
 }

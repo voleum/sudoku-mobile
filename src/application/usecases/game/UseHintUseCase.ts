@@ -8,6 +8,12 @@ import {
   GameHintUsage,
   PlayerProfile
 } from '../../../domain/types/GameTypes';
+import {
+  GameNotFoundError,
+  GameCompletedError,
+  HintLimitExceededError,
+  InvalidHintLevelError
+} from '../../../domain/errors';
 
 export interface UseHintRequest {
   gameId: string;
@@ -21,6 +27,8 @@ export interface UseHintResponse {
 }
 
 export class UseHintUseCase {
+  private static readonly HELPFUL_CONFIDENCE_THRESHOLD = 0.5; // Configurable threshold for determining hint helpfulness
+
   constructor(
     private hintSystem: IHintSystem,
     private gameRepository: IGameRepository
@@ -30,11 +38,11 @@ export class UseHintUseCase {
     // 1. Load current game
     const game = await this.gameRepository.findById(request.gameId);
     if (!game) {
-      throw new Error(`Game with id ${request.gameId} not found`);
+      throw new GameNotFoundError(request.gameId);
     }
 
     if (game.isCompleted) {
-      throw new Error('Cannot use hints on completed game');
+      throw new GameCompletedError('Cannot use hints on completed game');
     }
 
     // 2. Validate hint request
@@ -42,7 +50,7 @@ export class UseHintUseCase {
 
     // 3. Check if hint is allowed based on current usage
     if (!this.hintSystem.isHintAllowed(request.requestedLevel, game.hintUsageHistory, game.difficulty)) {
-      throw new Error(this.getHintLimitMessage(request.requestedLevel));
+      throw new HintLimitExceededError(this.getHintLimitMessage(request.requestedLevel));
     }
 
     // 4. Create hint request
@@ -76,7 +84,7 @@ export class UseHintUseCase {
 
   private validateHintRequest(request: UseHintRequest, game: GameEntity): void {
     if (!Object.values(HintLevel).includes(request.requestedLevel)) {
-      throw new Error(`Invalid hint level: ${request.requestedLevel}`);
+      throw new InvalidHintLevelError(request.requestedLevel.toString());
     }
 
     // Additional validation based on business rules
@@ -86,7 +94,7 @@ export class UseHintUseCase {
       ).length;
 
       if (directHintsUsed >= 3) {
-        throw new Error('Maximum direct solution hints (3) already used for this game');
+        throw new HintLimitExceededError('Maximum direct solution hints (3) already used for this game');
       }
     }
   }
@@ -100,7 +108,7 @@ export class UseHintUseCase {
       level: requestedLevel,
       technique: hint.technique || 'General',
       timestamp: new Date(),
-      wasHelpful: hint.confidence > 0.5, // Assume helpful if confidence is high
+      wasHelpful: hint.confidence > UseHintUseCase.HELPFUL_CONFIDENCE_THRESHOLD, // Configurable threshold for helpfulness determination
       ratingPenalty: hint.ratingPenalty // Store penalty for rating calculation (Business Analysis requirement)
     };
 
