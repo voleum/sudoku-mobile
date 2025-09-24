@@ -57,7 +57,7 @@ export class HintSystemService implements IHintSystem {
           return this.generateDirectSolutionHint(request.grid, solverHint);
 
         default:
-          throw new InvalidHintLevelError(request.requestedLevel.toString());
+          throw new InvalidHintLevelError(String(request.requestedLevel));
       }
     } catch (error) {
       if (error instanceof DomainError) {
