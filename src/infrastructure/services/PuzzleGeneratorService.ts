@@ -44,8 +44,8 @@ export class PuzzleGeneratorService implements IPuzzleGenerator {
   }
 
   private validateGenerateParameters(difficulty: DifficultyLevel, seed?: number): void {
-    // Validate difficulty parameter
-    const validDifficulties: DifficultyLevel[] = ['easy', 'medium', 'hard', 'expert'];
+    // Validate difficulty parameter - updated to include 'beginner' per business analysis
+    const validDifficulties: DifficultyLevel[] = ['beginner', 'easy', 'medium', 'hard', 'expert'];
     if (!validDifficulties.includes(difficulty)) {
       throw new Error(ERROR_MESSAGES.INVALID_DIFFICULTY);
     }

@@ -105,6 +105,17 @@ export class SudokuRules {
     return possibleValues;
   }
 
+  /**
+   * Gets difficulty settings according to business analysis requirements.
+   * Source: 1.2-game-rules-gameplay.md section 1.2.2
+   *
+   * Difficulty levels with clues and estimated time:
+   * - Beginner: 36-40 clues (44-49% filled), 10-20 min
+   * - Easy: 32-35 clues (39-43% filled), 15-30 min
+   * - Medium: 28-31 clues (34-38% filled), 25-45 min
+   * - Hard: 24-27 clues (29-33% filled), 40-80 min
+   * - Expert: 20-23 clues (24-28% filled), 60-120+ min
+   */
   static getDifficultySettings(difficulty: DifficultyLevel): {
     targetClues: number;
     minClues: number;
@@ -113,44 +124,53 @@ export class SudokuRules {
     techniques: string[];
   } {
     switch (difficulty) {
+      case 'beginner':
+        return {
+          targetClues: 38,
+          minClues: 36,
+          maxClues: 40,
+          estimatedTime: 15, // 10-20 minutes average
+          techniques: ['Naked singles', 'Hidden singles']
+        };
       case 'easy':
         return {
-          targetClues: 52,
-          minClues: 50,
-          maxClues: 55,
-          estimatedTime: 10,
-          techniques: ['Basic Sudoku rules only']
+          targetClues: 34,
+          minClues: 32,
+          maxClues: 35,
+          estimatedTime: 22, // 15-30 minutes average
+          techniques: ['Naked singles', 'Hidden singles', 'Pointing pairs']
         };
       case 'medium':
         return {
-          targetClues: 42,
-          minClues: 40,
-          maxClues: 45,
-          estimatedTime: 22,
-          techniques: ['Hidden singles', 'Naked pairs']
+          targetClues: 30,
+          minClues: 28,
+          maxClues: 31,
+          estimatedTime: 35, // 25-45 minutes average
+          techniques: ['Box/line reduction', 'Naked pairs', 'Hidden pairs']
         };
       case 'hard':
         return {
-          targetClues: 32,
-          minClues: 30,
-          maxClues: 35,
-          estimatedTime: 45,
-          techniques: ['Hidden pairs', 'Naked triples', 'X-Wing']
+          targetClues: 26,
+          minClues: 24,
+          maxClues: 27,
+          estimatedTime: 60, // 40-80 minutes average
+          techniques: ['X-Wing', 'Swordfish', 'Coloring']
         };
       case 'expert':
         return {
-          targetClues: 27,
-          minClues: 25,
-          maxClues: 30,
-          estimatedTime: 75,
-          techniques: ['Swordfish', 'XY-Wing', 'Advanced chains']
+          targetClues: 22,
+          minClues: 20,
+          maxClues: 23,
+          estimatedTime: 90, // 60-120+ minutes average
+          techniques: ['All known techniques', 'Unique patterns']
         };
       default:
+        // Fallback to beginner level for unknown difficulties
         return {
-          targetClues: 52,
-          minClues: 50,
-          maxClues: 55,
-          estimatedTime: 10,
+          targetClues: 38,
+          minClues: 36,
+          maxClues: 40,
+          estimatedTime: 15,
           techniques: ['Basic rules']
         };
     }

@@ -16,7 +16,7 @@ describe('PuzzleGeneratorService', () => {
   });
 
   describe('generate', () => {
-    const difficulties: DifficultyLevel[] = ['easy', 'medium', 'hard', 'expert'];
+    const difficulties: DifficultyLevel[] = ['beginner', 'easy', 'medium', 'hard', 'expert'];
 
     difficulties.forEach(difficulty => {
       test(`should generate valid ${difficulty} puzzle`, async () => {
