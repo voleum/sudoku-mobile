@@ -43,9 +43,10 @@ describe('StartNewGameUseCase', () => {
       }
     }
 
-    // Easy difficulty should have 50-55 clues according to business requirements
-    expect(filledCells).toBeGreaterThanOrEqual(50);
-    expect(filledCells).toBeLessThanOrEqual(55);
+    // Easy difficulty should have 32-35 clues according to updated business analysis
+    // Source: 1.2-game-rules-gameplay.md section 1.2.2
+    expect(filledCells).toBeGreaterThanOrEqual(32);
+    expect(filledCells).toBeLessThanOrEqual(35);
   });
 
   test('should save game to repository', async () => {
@@ -69,5 +70,27 @@ describe('StartNewGameUseCase', () => {
     // Grids should be identical when using same seed
     expect(response1.game.originalGrid).toEqual(response2.game.originalGrid);
     expect(response1.game.solution).toEqual(response2.game.solution);
+  });
+
+  test('should create beginner difficulty game with correct clue count', async () => {
+    const request = { difficulty: 'beginner' as DifficultyLevel };
+
+    const response = await useCase.execute(request);
+
+    // Count filled cells in the grid
+    let filledCells = 0;
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (response.game.grid[row][col] !== 0) {
+          filledCells++;
+        }
+      }
+    }
+
+    // Beginner difficulty should have 36-40 clues according to business analysis
+    // Source: 1.2-game-rules-gameplay.md section 1.2.2
+    expect(response.game.difficulty).toBe('beginner');
+    expect(filledCells).toBeGreaterThanOrEqual(36);
+    expect(filledCells).toBeLessThanOrEqual(40);
   });
 });

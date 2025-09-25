@@ -46,37 +46,36 @@ export const SUDOKU_RULES = {
 } as const;
 
 /**
- * Difficulty settings according to business requirements
- * Source: 1.4-functional-requirements.md sections 1.4.1
+ * Difficulty settings according to business analysis requirements
+ * Source: 1.2-game-rules-gameplay.md section 1.2.2
+ * Note: These constants are for reference only.
+ * Actual implementation uses SudokuRules.getDifficultySettings() to avoid duplication.
  */
-export const DIFFICULTY_SETTINGS = {
+export const DIFFICULTY_REFERENCE = {
+  beginner: {
+    clueRange: '36-40 clues (44-49% filled)',
+    timeRange: '10-20 minutes',
+    techniques: 'Naked singles, Hidden singles'
+  },
   easy: {
-    targetClues: 52,
-    minClues: 50,
-    maxClues: 55,
-    estimatedTime: 10, // 5-15 minutes average
-    techniques: ['Basic Sudoku rules only']
+    clueRange: '32-35 clues (39-43% filled)',
+    timeRange: '15-30 minutes',
+    techniques: 'Naked singles, Hidden singles, Pointing pairs'
   },
   medium: {
-    targetClues: 42,
-    minClues: 40,
-    maxClues: 45,
-    estimatedTime: 22, // 15-30 minutes average
-    techniques: ['Hidden singles', 'Naked pairs']
+    clueRange: '28-31 clues (34-38% filled)',
+    timeRange: '25-45 minutes',
+    techniques: 'Box/line reduction, Naked pairs, Hidden pairs'
   },
   hard: {
-    targetClues: 32,
-    minClues: 30,
-    maxClues: 35,
-    estimatedTime: 45, // 30-60 minutes average
-    techniques: ['Hidden pairs', 'Naked triples', 'X-Wing']
+    clueRange: '24-27 clues (29-33% filled)',
+    timeRange: '40-80 minutes',
+    techniques: 'X-Wing, Swordfish, Coloring'
   },
   expert: {
-    targetClues: 27,
-    minClues: 25,
-    maxClues: 30,
-    estimatedTime: 75, // 60+ minutes average
-    techniques: ['Swordfish', 'XY-Wing', 'Advanced chains']
+    clueRange: '20-23 clues (24-28% filled)',
+    timeRange: '60-120+ minutes',
+    techniques: 'All known techniques, Unique patterns'
   }
 } as const;
 
