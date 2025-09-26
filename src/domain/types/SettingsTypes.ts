@@ -114,6 +114,10 @@ export interface AudioSettings {
   dailyReminder: boolean;
   reminderTime: string;      // "20:00"
   achievementNotifications: boolean;
+
+  // Дзен-режим и релаксация
+  zenAmbientSounds: boolean;  // Фоновые звуки для дзен-режима
+  zenMusicEnabled: boolean;   // Медитативная музыка
 }
 
 export interface AdvancedSettings {
@@ -200,6 +204,8 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
   dailyReminder: false,
   reminderTime: '20:00',
   achievementNotifications: true,
+  zenAmbientSounds: false,
+  zenMusicEnabled: false,
 };
 
 export const DEFAULT_ADVANCED_SETTINGS: AdvancedSettings = {

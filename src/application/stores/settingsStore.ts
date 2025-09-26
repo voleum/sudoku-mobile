@@ -139,6 +139,8 @@ const SETTINGS_PROFILES: Record<SettingsProfile, ProfileInfo> = {
         ...DEFAULT_APP_SETTINGS.audio,
         soundEnabled: false,
         notificationsEnabled: false,
+        zenAmbientSounds: true,   // Включить фоновые звуки для релаксации
+        zenMusicEnabled: true,    // Включить медитативную музыку
       },
       advanced: {
         ...DEFAULT_APP_SETTINGS.advanced,

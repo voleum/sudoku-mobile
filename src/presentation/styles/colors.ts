@@ -77,4 +77,22 @@ export const Colors = {
   backdropLight: 'rgba(255, 255, 255, 0.95)',
 } as const;
 
+// Цветовая схема для дзен-режима (мягкие, успокаивающие тона)
+export const ZenColors = {
+  background: '#f8f9fa',      // Очень мягкий серый
+  surface: '#ffffff',         // Чистый белый
+  primary: '#6c757d',         // Приглушенный серый
+  secondary: '#adb5bd',       // Светло-серый
+  text: {
+    primary: '#495057',       // Мягкий темно-серый
+    secondary: '#6c757d',     // Средний серый
+    tertiary: '#adb5bd',      // Светлый серый
+  },
+  accent: '#dee2e6',          // Очень светлый акцент
+  border: '#e9ecef',          // Мягкая граница
+  shadow: 'rgba(0, 0, 0, 0.05)', // Очень мягкая тень
+  hover: '#f1f3f4',           // Едва заметный hover
+} as const;
+
 export type ColorName = keyof typeof Colors;
+export type ZenColorName = keyof typeof ZenColors;

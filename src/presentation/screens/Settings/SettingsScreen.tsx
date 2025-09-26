@@ -482,6 +482,22 @@ export const SettingsScreen: React.FC = () => {
             onValueChange={(value) => updateAudioSettings({ achievementNotifications: value })}
             testID="settings-achievement-notifications"
           />
+
+          <SettingToggle
+            title="Фоновые звуки дзен-режима"
+            description="Успокаивающие звуки для релаксации в дзен-режиме"
+            value={settings.audio.zenAmbientSounds}
+            onValueChange={(value) => updateAudioSettings({ zenAmbientSounds: value })}
+            testID="settings-zen-ambient-sounds"
+          />
+
+          <SettingToggle
+            title="Медитативная музыка"
+            description="Мягкая музыка для концентрации в дзен-режиме"
+            value={settings.audio.zenMusicEnabled}
+            onValueChange={(value) => updateAudioSettings({ zenMusicEnabled: value })}
+            testID="settings-zen-music"
+          />
         </SettingsSection>
 
         {/* Продвинутые настройки */}
