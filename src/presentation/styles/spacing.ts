@@ -17,6 +17,18 @@ export const Spacing = {
 
   // Минимальные области касания (44pt согласно HIG)
   touchTarget: 44,
+
+  // Адаптивные размеры для разных потребностей пользователей
+  accessibility: {
+    // Для пожилых пользователей и людей с моторными особенностями
+    touchTargetLarge: 56,     // Увеличенная область касания
+    touchTargetExtraLarge: 64, // Максимальная область касания
+    // Для пользователей с нарушениями зрения
+    fontScaleSmall: 0.8,      // Уменьшенный масштаб шрифта
+    fontScaleNormal: 1.0,     // Стандартный масштаб
+    fontScaleLarge: 1.2,      // Увеличенный масштаб
+    fontScaleExtraLarge: 1.5, // Максимальный масштаб
+  },
 } as const;
 
 export const BorderRadius = {

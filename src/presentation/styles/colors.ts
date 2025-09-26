@@ -34,11 +34,27 @@ export const Colors = {
   warning: '#F59E0B',
   info: '#3B82F6',
 
-  // Фон и поверхности
+  // Фон и поверхности (светлая тема)
   background: '#FFFFFF',
   backgroundSecondary: '#F9FAFB',
   surface: '#FFFFFF',
   surfaceSecondary: '#F3F4F6',
+
+  // Темная тема (для будущей реализации)
+  dark: {
+    background: '#000000',
+    backgroundSecondary: '#111827',
+    surface: '#1F2937',
+    surfaceSecondary: '#374151',
+    text: {
+      primary: '#F9FAFB',
+      secondary: '#D1D5DB',
+      tertiary: '#9CA3AF',
+      inverse: '#000000',
+    },
+    border: '#4B5563',
+    shadow: 'rgba(255, 255, 255, 0.1)',
+  },
 
   // Текст
   text: {
