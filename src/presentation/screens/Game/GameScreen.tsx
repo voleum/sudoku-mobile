@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,9 +7,10 @@ import {
   Dimensions,
 } from 'react-native';
 import { useGameStore } from '../../../application/stores/gameStore';
+import { useSettingsStore } from '../../../application/stores/settingsStore';
 import { CellPosition, CellValue } from '../../../domain/types/GameTypes';
 import { SudokuBoard, NumberPad, GameHeader } from '../../components/game';
-import { Colors } from '../../styles/colors';
+import { Colors, ZenColors } from '../../styles/colors';
 import { Spacing } from '../../styles/spacing';
 
 export const GameScreen: React.FC = () => {
@@ -17,6 +18,10 @@ export const GameScreen: React.FC = () => {
     currentGame,
     selectedCell,
   } = useGameStore();
+
+  // Получаем настройки для дзен-режима
+  const { settings } = useSettingsStore();
+  const isZenMode = settings.gameplay.zenMode;
 
   // Mock methods for now until GameStore is implemented
   const setSelectedCell = useCallback((position: CellPosition | null) => {
@@ -60,6 +65,30 @@ export const GameScreen: React.FC = () => {
   const [notesMode, setNotesMode] = useState(false);
   const [cellNotes, setCellNotes] = useState<{ [key: string]: number[] }>({});
   const [isPaused] = useState(false);
+
+  // Дзен-режим: медитативная музыка и фоновые звуки
+  useEffect(() => {
+    if (isZenMode && settings.audio.zenMusicEnabled) {
+      // TODO: Запустить фоновую медитативную музыку
+      console.log('🧘 Запуск медитативной музыки для дзен-режима');
+      // AudioManager.playZenMusic();
+    }
+
+    if (isZenMode && settings.audio.zenAmbientSounds) {
+      // TODO: Запустить успокаивающие фоновые звуки
+      console.log('🎵 Запуск фоновых звуков для дзен-режима');
+      // AudioManager.playZenAmbientSounds();
+    }
+
+    return () => {
+      // TODO: Остановить медитативную музыку при выходе из дзен-режима
+      if (isZenMode) {
+        console.log('🔇 Остановка дзен-аудио');
+        // AudioManager.stopZenMusic();
+        // AudioManager.stopZenAmbientSounds();
+      }
+    };
+  }, [isZenMode, settings.audio.zenMusicEnabled, settings.audio.zenAmbientSounds]);
 
   // Создание ключа для заметок ячейки
   const getCellNotesKey = useCallback((position: CellPosition): string => {
@@ -269,34 +298,44 @@ export const GameScreen: React.FC = () => {
   const isSmallScreen = screenHeight < 700;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isZenMode && styles.zenContainer]}>
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        <View style={[styles.gameContainer, isSmallScreen && styles.gameContainerCompact]}>
-          {/* Game Header согласно системному анализу - Timer, Difficulty, Controls */}
-          <GameHeader
-            startTime={gameStartTime}
-            isPaused={isPaused}
-            elapsedTimeInSeconds={elapsedTime}
-            movesCount={movesCount}
-            difficulty={currentGame?.difficulty}
-            onClear={handleClearCell}
-            onHint={handleGetHint}
-            onUndo={handleUndoMove}
-            onToggleNotesMode={handleToggleNotesMode}
-            notesMode={notesMode}
-            canUndo={canUndo}
-            hintsRemaining={hintsRemaining}
-            disabled={isPaused}
-            testID="game-header"
-          />
+        <View style={[
+          styles.gameContainer,
+          isSmallScreen && styles.gameContainerCompact,
+          isZenMode && styles.zenGameContainer
+        ]}>
+          {/* Game Header - скрывается в дзен-режиме для минимизации отвлекающих элементов */}
+          {!isZenMode && (
+            <GameHeader
+              startTime={gameStartTime}
+              isPaused={isPaused}
+              elapsedTimeInSeconds={elapsedTime}
+              movesCount={movesCount}
+              difficulty={currentGame?.difficulty}
+              onClear={handleClearCell}
+              onHint={handleGetHint}
+              onUndo={handleUndoMove}
+              onToggleNotesMode={handleToggleNotesMode}
+              notesMode={notesMode}
+              canUndo={canUndo}
+              hintsRemaining={hintsRemaining}
+              disabled={isPaused}
+              testID="game-header"
+            />
+          )}
 
           {/* Игровое поле - центральный элемент */}
-          <View style={[styles.boardContainer, isSmallScreen && styles.boardContainerCompact]}>
+          <View style={[
+            styles.boardContainer,
+            isSmallScreen && styles.boardContainerCompact,
+            isZenMode && styles.zenBoardContainer
+          ]}>
             <SudokuBoard
               grid={currentGame.grid}
               originalGrid={currentGame.originalGrid}
@@ -371,5 +410,29 @@ const styles = StyleSheet.create({
   boardContainerCompact: {
     marginVertical: Spacing.md,
     padding: Spacing.sm,
+  },
+
+  // Стили для дзен-режима - мягкие, успокаивающие тона
+  zenContainer: {
+    backgroundColor: ZenColors.background,
+  },
+
+  zenGameContainer: {
+    backgroundColor: ZenColors.background,
+    paddingTop: Spacing.lg, // Больше отступа сверху без GameHeader
+  },
+
+  zenBoardContainer: {
+    backgroundColor: ZenColors.surface,
+    borderRadius: 16, // Более мягкие углы
+    padding: Spacing.lg,
+    marginVertical: Spacing.xl,
+    shadowColor: ZenColors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, // Очень мягкая тень
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: ZenColors.border,
   },
 });
