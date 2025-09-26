@@ -131,6 +131,47 @@ export const GameScreen: React.FC = () => {
     return getHintCells();
   }, [getHintCells]);
 
+  // Поиск следующей пустой ячейки для автоматического перехода
+  const findNextEmptyCell = useCallback((currentPosition: CellPosition): CellPosition | null => {
+    if (!currentGame) return null;
+
+    const { grid } = currentGame;
+    const startRow = currentPosition.row;
+    const startCol = currentPosition.col;
+
+    // Ищем следующую пустую ячейку по порядку
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        // Начинаем поиск с текущей позиции + 1
+        const currentIndex = row * 9 + col;
+        const startIndex = startRow * 9 + startCol;
+
+        if (currentIndex > startIndex && grid[row][col] === 0) {
+          return {
+            row,
+            col,
+            box: Math.floor(row / 3) * 3 + Math.floor(col / 3)
+          };
+        }
+      }
+    }
+
+    // Если не найдено после текущей позиции, ищем с начала
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (grid[row][col] === 0) {
+          return {
+            row,
+            col,
+            box: Math.floor(row / 3) * 3 + Math.floor(col / 3)
+          };
+        }
+      }
+    }
+
+    return null;
+  }, [currentGame]);
+
   // Обработка ввода числа в выбранную ячейку
   const handleNumberInput = useCallback((value: CellValue) => {
     if (!selectedCell || !currentGame) return;
@@ -187,49 +228,9 @@ export const GameScreen: React.FC = () => {
     cellNotes,
     getCellNotesKey,
     makeMove,
-    setSelectedCell
+    setSelectedCell,
+    findNextEmptyCell
   ]);
-
-  // Поиск следующей пустой ячейки для автоматического перехода
-  const findNextEmptyCell = useCallback((currentPosition: CellPosition): CellPosition | null => {
-    if (!currentGame) return null;
-
-    const { grid } = currentGame;
-    const startRow = currentPosition.row;
-    const startCol = currentPosition.col;
-
-    // Ищем следующую пустую ячейку по порядку
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
-        // Начинаем поиск с текущей позиции + 1
-        const currentIndex = row * 9 + col;
-        const startIndex = startRow * 9 + startCol;
-
-        if (currentIndex > startIndex && grid[row][col] === 0) {
-          return {
-            row,
-            col,
-            box: Math.floor(row / 3) * 3 + Math.floor(col / 3)
-          };
-        }
-      }
-    }
-
-    // Если не найдено после текущей позиции, ищем с начала
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
-        if (grid[row][col] === 0) {
-          return {
-            row,
-            col,
-            box: Math.floor(row / 3) * 3 + Math.floor(col / 3)
-          };
-        }
-      }
-    }
-
-    return null;
-  }, [currentGame]);
 
   // Получение количества оставшихся цифр для каждого числа
   const getRemainingCounts = useCallback(() => {
