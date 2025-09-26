@@ -1,0 +1,33 @@
+{
+  "difficulty": {
+    "beginner": "НОВИЧОК",
+    "easy": "ЛЕГКИЙ",
+    "medium": "СРЕДНИЙ",
+    "hard": "СЛОЖНЫЙ",
+    "expert": "ЭКСПЕРТНЫЙ"
+  },
+  "difficulty_description": {
+    "beginner": "Идеально для первого знакомства",
+    "easy": "Для комфортной игры",
+    "medium": "Оптимальная сложность",
+    "hard": "Для опытных игроков",
+    "expert": "Вызов для мастеров"
+  },
+  "stats": {
+    "best_time": "Лучшее время",
+    "completion_rate": "Процент побед",
+    "games_played": "Игр сыграно",
+    "current_streak": "Серия побед",
+    "total_games": "Всего игр",
+    "average_time": "Среднее время",
+    "win_rate": "Побед",
+    "total_errors": "Всего ошибок",
+    "average_errors": "Средние ошибки"
+  },
+  "quick_start": "БЫСТРАЯ ИГРА",
+  "quick_start_subtitle": "Начать с рекомендуемой сложности",
+  "your_statistics": "ВАША СТАТИСТИКА",
+  "detailed_statistics": "Подробная статистика ▶",
+  "recommended": "РЕКОМЕНДУЕМ",
+  "difficulty_selection": "ВЫБОР СЛОЖНОСТИ"
+}
