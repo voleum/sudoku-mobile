@@ -22,6 +22,7 @@ import {
   AnimationSpeed,
   Quality,
   SettingsProfile,
+  Language,
 } from '../../../domain/types/SettingsTypes';
 import { DifficultyLevel } from '../../../domain/types/GameTypes';
 import { Colors } from '../../styles/colors';
@@ -90,6 +91,11 @@ export const SettingsScreen: React.FC = () => {
     { value: Quality.LOW, label: 'Низкое', description: 'Экономия батареи' },
     { value: Quality.MEDIUM, label: 'Среднее', description: 'Сбалансированное качество' },
     { value: Quality.HIGH, label: 'Высокое', description: 'Лучшее качество' },
+  ];
+
+  const languageOptions = [
+    { value: Language.RU, label: 'Русский', description: 'Русский интерфейс' },
+    { value: Language.EN, label: 'English', description: 'English interface' },
   ];
 
   const profileOptions = getAvailableProfiles().map(profile => ({
@@ -247,6 +253,22 @@ export const SettingsScreen: React.FC = () => {
             onValueChange={(value) => updateGameplaySettings({ highlightSameNumbers: value })}
             testID="settings-highlight-same"
           />
+
+          <SettingToggle
+            title="Автоматическая проверка завершения"
+            description="Автоматически проверять завершение судоку при заполнении"
+            value={settings.gameplay.autoCheckComplete}
+            onValueChange={(value) => updateGameplaySettings({ autoCheckComplete: value })}
+            testID="settings-auto-check-complete"
+          />
+
+          <SettingToggle
+            title="Дзен-режим"
+            description="Специальный режим для расслабления без таймера и счетчиков"
+            value={settings.gameplay.zenMode}
+            onValueChange={(value) => updateGameplaySettings({ zenMode: value })}
+            testID="settings-zen-mode"
+          />
         </SettingsSection>
 
         {/* Интерфейс */}
@@ -254,6 +276,15 @@ export const SettingsScreen: React.FC = () => {
           title="🎨 Интерфейс"
           description="Внешний вид и оформление игры"
         >
+          <SettingSelector
+            title="Язык интерфейса"
+            description="Язык текстов и меню приложения"
+            value={settings.ui.language}
+            options={languageOptions}
+            onValueChange={(value) => updateUISettings({ language: value })}
+            testID="settings-language"
+          />
+
           <SettingSelector
             title="Тема оформления"
             description="Цветовая схема приложения"
@@ -477,6 +508,14 @@ export const SettingsScreen: React.FC = () => {
             formatValue={formatAutoSave}
             onValueChange={(value) => updateAdvancedSettings({ autoSaveInterval: value })}
             testID="settings-auto-save"
+          />
+
+          <SettingToggle
+            title="Пауза при сворачивании"
+            description="Автоматически ставить игру на паузу при сворачивании приложения"
+            value={settings.advanced.pauseOnMinimize}
+            onValueChange={(value) => updateAdvancedSettings({ pauseOnMinimize: value })}
+            testID="settings-pause-on-minimize"
           />
 
           <SettingToggle

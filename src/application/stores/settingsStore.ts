@@ -56,6 +56,8 @@ const SETTINGS_PROFILES: Record<SettingsProfile, ProfileInfo> = {
         preventInvalidMoves: false,
         autoMarkNotes: false,
         showPossibleValues: false,
+        autoCheckComplete: false,
+        zenMode: false,
       },
       ui: {
         ...DEFAULT_APP_SETTINGS.ui,
@@ -85,6 +87,8 @@ const SETTINGS_PROFILES: Record<SettingsProfile, ProfileInfo> = {
         autoMarkNotes: true,
         showPossibleValues: true,
         highlightSameNumbers: true,
+        autoCheckComplete: true,
+        zenMode: false,
       },
       ui: {
         ...DEFAULT_APP_SETTINGS.ui,
@@ -118,6 +122,8 @@ const SETTINGS_PROFILES: Record<SettingsProfile, ProfileInfo> = {
         autoMarkNotes: false,
         showPossibleValues: false,
         highlightSameNumbers: false,
+        autoCheckComplete: false,
+        zenMode: true,
       },
       ui: {
         ...DEFAULT_APP_SETTINGS.ui,
@@ -157,6 +163,8 @@ const SETTINGS_PROFILES: Record<SettingsProfile, ProfileInfo> = {
         autoMarkNotes: true,
         showPossibleValues: true,
         highlightSameNumbers: true,
+        autoCheckComplete: true,
+        zenMode: false,
       },
       ui: {
         ...DEFAULT_APP_SETTINGS.ui,
@@ -196,6 +204,8 @@ const SETTINGS_PROFILES: Record<SettingsProfile, ProfileInfo> = {
         autoMarkNotes: false,
         showPossibleValues: false,
         highlightSameNumbers: false,
+        autoCheckComplete: false,
+        zenMode: false,
       },
       ui: {
         ...DEFAULT_APP_SETTINGS.ui,

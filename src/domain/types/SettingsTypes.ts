@@ -44,6 +44,11 @@ export enum Quality {
   HIGH = 'high'
 }
 
+export enum Language {
+  RU = 'ru',  // Русский
+  EN = 'en'   // English
+}
+
 // Интерфейсы настроек согласно бизнес-анализу
 export interface GameplaySettings {
   // Сложность и подсказки
@@ -61,9 +66,16 @@ export interface GameplaySettings {
   autoMarkNotes: boolean;       // Автоматические заметки
   showPossibleValues: boolean;  // Показывать возможные значения
   highlightSameNumbers: boolean; // Подсвечивать одинаковые цифры
+  autoCheckComplete: boolean;   // Автоматическая проверка завершения
+
+  // Специальные режимы
+  zenMode: boolean;             // Дзен-режим для расслабления
 }
 
 export interface UISettings {
+  // Язык интерфейса
+  language: Language;
+
   // Тема оформления
   theme: ThemeType;
   colorScheme: ColorScheme;
@@ -108,6 +120,7 @@ export interface AdvancedSettings {
   // Производительность
   animationQuality: Quality;
   autoSaveInterval: number;    // секунды
+  pauseOnMinimize: boolean;    // Пауза при сворачивании
 
   // Данные и приватность
   analyticsEnabled: boolean;
@@ -155,9 +168,12 @@ export const DEFAULT_GAMEPLAY_SETTINGS: GameplaySettings = {
   autoMarkNotes: false,
   showPossibleValues: false,
   highlightSameNumbers: true,
+  autoCheckComplete: false,
+  zenMode: false,
 };
 
 export const DEFAULT_UI_SETTINGS: UISettings = {
+  language: Language.RU,
   theme: ThemeType.AUTO,
   colorScheme: ColorScheme.MODERN,
   showTimer: true,
@@ -189,6 +205,7 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
 export const DEFAULT_ADVANCED_SETTINGS: AdvancedSettings = {
   animationQuality: Quality.MEDIUM,
   autoSaveInterval: 30,
+  pauseOnMinimize: true,
   analyticsEnabled: true,
   crashReportsEnabled: true,
   cloudSyncEnabled: false,
