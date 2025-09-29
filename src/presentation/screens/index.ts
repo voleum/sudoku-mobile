@@ -1,5 +1,5 @@
 // Экспорт всех экранов приложения
 export { HomeScreen } from './Home';
 export { DifficultySelectionScreen } from './DifficultySelection';
-export { SettingsScreen } from './Settings';
+export { SettingsScreen, AboutScreen } from './Settings';
 export { StatisticsScreen } from './Statistics';
