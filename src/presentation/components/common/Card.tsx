@@ -15,6 +15,7 @@ interface CardProps {
   pressable?: boolean;
   elevated?: boolean;
   testID?: string;
+  accessibilityLabel?: string;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -24,6 +25,7 @@ export const Card: React.FC<CardProps> = ({
   pressable = false,
   elevated = true,
   testID,
+  accessibilityLabel,
 }) => {
   const cardStyle = [
     styles.base,
@@ -38,6 +40,7 @@ export const Card: React.FC<CardProps> = ({
         onPress={onPress}
         activeOpacity={0.8}
         testID={testID}
+        accessibilityLabel={accessibilityLabel}
       >
         {children}
       </TouchableOpacity>
@@ -45,7 +48,7 @@ export const Card: React.FC<CardProps> = ({
   }
 
   return (
-    <View style={cardStyle} testID={testID}>
+    <View style={cardStyle} testID={testID} accessibilityLabel={accessibilityLabel}>
       {children}
     </View>
   );
