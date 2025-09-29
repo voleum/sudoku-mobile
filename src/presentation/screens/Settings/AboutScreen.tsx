@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Linking,
   Alert,
+  Platform,
 } from 'react-native';
 import { Card } from '../../components/common/Card';
 import { Colors } from '../../styles/colors';
@@ -51,6 +52,49 @@ export const AboutScreen: React.FC = () => {
         [{ text: 'OK' }]
       );
     }
+  };
+
+  // Обработчик оценки приложения
+  const handleRateApp = () => {
+    Alert.alert(
+      'Оценить приложение',
+      'Нравится наша игра? Поставьте оценку в магазине приложений!',
+      [
+        { text: 'Позже', style: 'cancel' },
+        {
+          text: 'Оценить',
+          onPress: () => {
+            // URL для магазинов приложений (будет заменен при публикации)
+            const storeUrl = Platform.select({
+              ios: 'https://apps.apple.com/app/id123456789', // Заменить на реальный App Store ID
+              android: 'https://play.google.com/store/apps/details?id=com.sudokugame', // Заменить на реальный package ID
+            });
+            if (storeUrl) {
+              handleLinkPress(storeUrl, 'магазин приложений');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Обработчик обратной связи
+  const handleFeedback = () => {
+    Alert.alert(
+      'Обратная связь',
+      'Выберите способ связи с нами:',
+      [
+        { text: 'Отмена', style: 'cancel' },
+        {
+          text: 'Email',
+          onPress: () => handleLinkPress(`mailto:${contactInfo.email}?subject=Судоку - Обратная связь`, 'email')
+        },
+        {
+          text: 'GitHub Issues',
+          onPress: () => handleLinkPress(`${contactInfo.github}/issues`, 'GitHub Issues')
+        }
+      ]
+    );
   };
 
   return (
@@ -184,6 +228,53 @@ export const AboutScreen: React.FC = () => {
               <View style={styles.contactInfo}>
                 <Text style={styles.contactTitle}>Исходный код</Text>
                 <Text style={styles.contactValue}>{contactInfo.github}</Text>
+              </View>
+            </View>
+          </Card>
+        </Card>
+
+        {/* Действия пользователя */}
+        <Card
+          style={styles.card}
+          testID="actions-card"
+          accessibilityLabel="Действия пользователя: оценка приложения и обратная связь"
+        >
+          <Text style={styles.sectionTitle}>👍 Помогите проекту</Text>
+
+          <Card
+            pressable
+            onPress={handleRateApp}
+            style={styles.actionItem}
+            testID="rate-app-button"
+            accessibilityRole="button"
+            accessibilityLabel="Оценить приложение в магазине приложений"
+          >
+            <View style={styles.actionRow}>
+              <Text style={styles.actionIcon}>⭐</Text>
+              <View style={styles.actionInfo}>
+                <Text style={styles.actionTitle}>Оценить приложение</Text>
+                <Text style={styles.actionDescription}>
+                  Поставьте оценку в магазине приложений
+                </Text>
+              </View>
+            </View>
+          </Card>
+
+          <Card
+            pressable
+            onPress={handleFeedback}
+            style={styles.actionItem}
+            testID="feedback-button"
+            accessibilityRole="button"
+            accessibilityLabel="Отправить обратную связь разработчикам"
+          >
+            <View style={styles.actionRow}>
+              <Text style={styles.actionIcon}>💬</Text>
+              <View style={styles.actionInfo}>
+                <Text style={styles.actionTitle}>Обратная связь</Text>
+                <Text style={styles.actionDescription}>
+                  Отправьте отзыв или сообщите об ошибке
+                </Text>
               </View>
             </View>
           </Card>
@@ -392,6 +483,39 @@ const styles = StyleSheet.create({
     ...Typography.body1,
     color: Colors.primary,
     fontWeight: '600',
+  },
+
+  // Действия пользователя
+  actionItem: {
+    marginBottom: Spacing.sm,
+    backgroundColor: Colors.backgroundSecondary,
+    minHeight: 44, // Минимальная высота для touch target (iOS requirement)
+  },
+
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  actionIcon: {
+    fontSize: Typography.fontSize.xl,
+    marginRight: Spacing.md,
+  },
+
+  actionInfo: {
+    flex: 1,
+  },
+
+  actionTitle: {
+    ...Typography.body1,
+    color: Colors.text.primary,
+    fontWeight: '600',
+    marginBottom: Spacing.xs,
+  },
+
+  actionDescription: {
+    ...Typography.body2,
+    color: Colors.text.secondary,
   },
 
   // Правовая информация
