@@ -10,27 +10,21 @@ import {
   Platform,
 } from 'react-native';
 import { Card } from '../../components/common/Card';
+import { AppLogo } from '../../components/about';
 import { Colors } from '../../styles/colors';
 import { Typography } from '../../styles/typography';
 import { Spacing } from '../../styles/spacing';
+import { getAppInfo, getContactInfo, getTechnologyInfo, getVersionString } from '../../../utils/appInfo';
 
 export const AboutScreen: React.FC = () => {
-  // Информация о приложении согласно package.json
-  const appInfo = {
-    name: 'Судоку',
-    version: '0.0.1',
-    buildNumber: '1',
-    releaseDate: 'Сентябрь 2025',
-    developer: 'voleum',
-    description: 'Кросплатформенная игра Судоку с современным дизайном и интуитивным интерфейсом',
-  };
+  // TODO: Интеграция с i18n системой согласно 2.1.6-internationalization-planning.md
+  // После установки react-i18next заменить захардкоженные строки на переводы
+  // const { t } = useTranslation('about');
 
-  // Контактная информация
-  const contactInfo = {
-    email: 'support@sudoku-game.com',
-    website: 'https://sudoku-game.com',
-    github: 'https://github.com/voleum/sudoku-mobile',
-  };
+  // Реальные данные приложения из package.json согласно системному анализу
+  const appInfo = getAppInfo();
+  const contactInfo = getContactInfo();
+  const technologies = getTechnologyInfo();
 
   // Обработчик открытия ссылок
   const handleLinkPress = async (url: string, linkType: string) => {
@@ -112,11 +106,13 @@ export const AboutScreen: React.FC = () => {
           accessibilityLabel={`Информация о приложении ${appInfo.name} версии ${appInfo.version}`}
         >
           <View style={styles.header}>
-            <View style={styles.appIconContainer}>
-              <Text style={styles.appIcon}>🧩</Text>
-            </View>
+            <AppLogo
+              version={appInfo.version}
+              size="large"
+              testID="about-app-logo"
+            />
             <View style={styles.appTitleContainer}>
-              <Text style={styles.appTitle}>{appInfo.name}</Text>
+              <Text style={styles.appTitle}>{appInfo.displayName}</Text>
               <Text style={styles.appSubtitle}>Логическая головоломка</Text>
             </View>
           </View>
@@ -128,7 +124,7 @@ export const AboutScreen: React.FC = () => {
           <View style={styles.infoSection}>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Версия:</Text>
-              <Text style={styles.infoValue}>{appInfo.version} (build {appInfo.buildNumber})</Text>
+              <Text style={styles.infoValue}>{getVersionString()}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Дата релиза:</Text>
@@ -167,11 +163,9 @@ export const AboutScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>🤝 Благодарности</Text>
           <View style={styles.creditsSection}>
             <Text style={styles.creditsSubtitle}>Технологии:</Text>
-            <Text style={styles.creditsItem}>• React Native 0.81.4</Text>
-            <Text style={styles.creditsItem}>• TypeScript</Text>
-            <Text style={styles.creditsItem}>• Zustand для state management</Text>
-            <Text style={styles.creditsItem}>• SQLite для локального хранения</Text>
-            <Text style={styles.creditsItem}>• Jest для тестирования</Text>
+            {technologies.map((tech, index) => (
+              <Text key={index} style={styles.creditsItem}>• {tech}</Text>
+            ))}
           </View>
 
           <View style={styles.creditsSection}>
@@ -354,14 +348,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.lg,
-  },
-
-  appIconContainer: {
-    marginRight: Spacing.md,
-  },
-
-  appIcon: {
-    fontSize: Typography.fontSize['4xl'],
   },
 
   appTitleContainer: {
