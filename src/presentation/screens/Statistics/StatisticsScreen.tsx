@@ -6,7 +6,6 @@ import {
   SafeAreaView,
 } from 'react-native';
 import {
-  DifficultyLevel,
   GameStatistics,
   DifficultyStatistics,
   Achievement,
