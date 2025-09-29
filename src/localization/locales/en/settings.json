@@ -1,0 +1,44 @@
+{
+  "about": {
+    "title": "About",
+    "appName": "Sudoku",
+    "version": "Version {{version}}",
+    "description": "Classic Sudoku game with modern interface",
+    "developer": "Developer",
+    "contact": "Contacts",
+    "email": "Email",
+    "website": "Website",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "licenses": "Licenses",
+    "rateApp": {
+      "title": "Rate App",
+      "message": "Enjoying our game? Please rate us in the app store!",
+      "later": "Later",
+      "rate": "Rate"
+    },
+    "feedback": {
+      "title": "Feedback",
+      "message": "Choose how to contact us:",
+      "cancel": "Cancel",
+      "email": "Email",
+      "github": "GitHub Issues"
+    },
+    "features": {
+      "title": "🎯 Features"
+    },
+    "credits": {
+      "title": "🤝 Credits"
+    },
+    "contacts": {
+      "title": "📞 Contacts"
+    },
+    "actions": {
+      "title": "👍 Help the Project"
+    },
+    "legal": {
+      "title": "⚖️ Legal Information"
+    },
+    "copyright": "© {{year}} All rights reserved"
+  }
+}

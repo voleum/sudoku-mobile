@@ -18,8 +18,12 @@ import { getAppInfo, getContactInfo, getTechnologyInfo, getVersionString } from 
 
 export const AboutScreen: React.FC = () => {
   // TODO: Интеграция с i18n системой согласно 2.1.6-internationalization-planning.md
-  // После установки react-i18next заменить захардкоженные строки на переводы
-  // const { t } = useTranslation('about');
+  // После установки react-i18next заменить захардкоженные строки на переводы из settings.json:
+  // const { t } = useTranslation('settings');
+  // Примеры замен:
+  // Alert.alert('Оценить приложение', '...') → Alert.alert(t('about.rateApp.title'), t('about.rateApp.message'))
+  // '🎯 Возможности' → t('about.features.title')
+  // '📞 Контакты' → t('about.contacts.title')
 
   // Реальные данные приложения из package.json согласно системному анализу
   const appInfo = getAppInfo();
@@ -50,18 +54,21 @@ export const AboutScreen: React.FC = () => {
 
   // Обработчик оценки приложения
   const handleRateApp = () => {
+    // TODO i18n: Alert.alert(t('about.rateApp.title'), t('about.rateApp.message'))
     Alert.alert(
       'Оценить приложение',
       'Нравится наша игра? Поставьте оценку в магазине приложений!',
       [
+        // TODO i18n: { text: t('about.rateApp.later'), style: 'cancel' }
         { text: 'Позже', style: 'cancel' },
         {
+          // TODO i18n: text: t('about.rateApp.rate')
           text: 'Оценить',
           onPress: () => {
-            // URL для магазинов приложений (будет заменен при публикации)
+            // URL для магазинов приложений (будет обновлен после публикации)
             const storeUrl = Platform.select({
-              ios: 'https://apps.apple.com/app/id123456789', // Заменить на реальный App Store ID
-              android: 'https://play.google.com/store/apps/details?id=com.sudokugame', // Заменить на реальный package ID
+              ios: 'https://apps.apple.com/app/sudoku-game/id123456789', // TODO: Заменить на реальный App Store ID после публикации
+              android: 'https://play.google.com/store/apps/details?id=com.sudokugame', // Реальный package ID из android/app/build.gradle
             });
             if (storeUrl) {
               handleLinkPress(storeUrl, 'магазин приложений');
@@ -74,16 +81,20 @@ export const AboutScreen: React.FC = () => {
 
   // Обработчик обратной связи
   const handleFeedback = () => {
+    // TODO i18n: Alert.alert(t('about.feedback.title'), t('about.feedback.message'))
     Alert.alert(
       'Обратная связь',
       'Выберите способ связи с нами:',
       [
+        // TODO i18n: { text: t('about.feedback.cancel'), style: 'cancel' }
         { text: 'Отмена', style: 'cancel' },
         {
+          // TODO i18n: text: t('about.feedback.email')
           text: 'Email',
           onPress: () => handleLinkPress(`mailto:${contactInfo.email}?subject=Судоку - Обратная связь`, 'email')
         },
         {
+          // TODO i18n: text: t('about.feedback.github')
           text: 'GitHub Issues',
           onPress: () => handleLinkPress(`${contactInfo.github}/issues`, 'GitHub Issues')
         }
@@ -143,6 +154,7 @@ export const AboutScreen: React.FC = () => {
           testID="features-card"
           accessibilityLabel="Основные возможности приложения"
         >
+          {/* TODO i18n: <Text style={styles.sectionTitle}>{t('about.features.title')}</Text> */}
           <Text style={styles.sectionTitle}>🎯 Возможности</Text>
           <View style={styles.featuresList}>
             <Text style={styles.featureItem}>• 5 уровней сложности (Новичок → Эксперт)</Text>
@@ -160,6 +172,7 @@ export const AboutScreen: React.FC = () => {
           testID="credits-card"
           accessibilityLabel="Благодарности и используемые технологии"
         >
+          {/* TODO i18n: <Text style={styles.sectionTitle}>{t('about.credits.title')}</Text> */}
           <Text style={styles.sectionTitle}>🤝 Благодарности</Text>
           <View style={styles.creditsSection}>
             <Text style={styles.creditsSubtitle}>Технологии:</Text>
@@ -182,6 +195,7 @@ export const AboutScreen: React.FC = () => {
           testID="contact-card"
           accessibilityLabel="Контактная информация и поддержка"
         >
+          {/* TODO i18n: <Text style={styles.sectionTitle}>{t('about.contacts.title')}</Text> */}
           <Text style={styles.sectionTitle}>📞 Контакты</Text>
 
           <Card
@@ -233,6 +247,7 @@ export const AboutScreen: React.FC = () => {
           testID="actions-card"
           accessibilityLabel="Действия пользователя: оценка приложения и обратная связь"
         >
+          {/* TODO i18n: <Text style={styles.sectionTitle}>{t('about.actions.title')}</Text> */}
           <Text style={styles.sectionTitle}>👍 Помогите проекту</Text>
 
           <Card
@@ -280,6 +295,7 @@ export const AboutScreen: React.FC = () => {
           testID="legal-card"
           accessibilityLabel="Правовая информация и лицензии"
         >
+          {/* TODO i18n: <Text style={styles.sectionTitle}>{t('about.legal.title')}</Text> */}
           <Text style={styles.sectionTitle}>⚖️ Правовая информация</Text>
 
           <View style={styles.legalSection}>

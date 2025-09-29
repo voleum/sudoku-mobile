@@ -43,8 +43,8 @@ export const getAppInfo = (): AppInfo => {
  */
 export const getContactInfo = (): ContactInfo => {
   return {
-    email: 'support@sudoku-game.com',
-    website: 'https://sudoku-game.com',
+    email: 'voleum.dev@gmail.com', // Реальный email разработчика
+    website: 'https://github.com/voleum/sudoku-mobile', // GitHub как основной веб-сайт проекта
     github: 'https://github.com/voleum/sudoku-mobile',
   };
 };
