@@ -4,33 +4,19 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
+import { GameStatistics } from '../../../domain/types/GameTypes';
 import { Colors } from '../../styles/colors';
 import { Typography } from '../../styles/typography';
 import { Spacing } from '../../styles/spacing';
 import { Card } from '../common/Card';
 import { StatItem } from './StatItem';
 
-interface GameStats {
-  totalGames: number;
-  gamesCompleted: number;
-  totalTime: number; // в секундах
-  bestTime: number; // в секундах
-  averageTime: number; // в секундах
-  winRate: number; // процент
-  currentStreak: number;
-  longestStreak: number;
-  totalErrors: number;
-  averageErrors: number;
-  hintsUsed: number;
-  averageHints: number;
-}
-
 interface StatsSummaryCardProps {
-  stats: GameStats;
+  stats: GameStatistics;
   testID?: string;
 }
 
-export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
+export const StatsSummaryCard = React.memo<StatsSummaryCardProps>(({
   stats,
   testID,
 }) => {
@@ -58,7 +44,11 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
   };
 
   return (
-    <Card style={styles.card} testID={testID}>
+    <Card
+      style={styles.card}
+      testID={testID}
+      accessibilityLabel={`Общая статистика игрока. Всего игр: ${stats.totalGames}, завершено: ${stats.gamesCompleted}, процент побед: ${stats.winRate}%`}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Общая статистика</Text>
         <Text style={styles.icon}>📊</Text>
@@ -117,7 +107,7 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
           />
           <StatItem
             icon="⏱️"
-            value={formatTime(stats.totalTime)}
+            value={formatTime(stats.totalPlayTime)}
             label="Общее время"
             color={Colors.text.secondary}
             testID="total-time-stat"
@@ -132,7 +122,7 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
         <Text style={styles.sectionTitle}>Детали игры</Text>
         <StatItem
           icon="💡"
-          value={`${stats.hintsUsed} (${stats.averageHints.toFixed(1)} в среднем)`}
+          value={`${stats.totalHints} (${stats.averageHints.toFixed(1)} в среднем)`}
           label="Подсказки использовано"
           horizontal
           color={Colors.warning}
@@ -157,7 +147,7 @@ export const StatsSummaryCard: React.FC<StatsSummaryCardProps> = ({
       </View>
     </Card>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {

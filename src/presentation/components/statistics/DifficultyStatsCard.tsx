@@ -4,29 +4,18 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
-import { DifficultyLevel } from '../../../domain/types/GameTypes';
+import { DifficultyLevel, DifficultyStatistics } from '../../../domain/types/GameTypes';
 import { Colors } from '../../styles/colors';
 import { Typography } from '../../styles/typography';
 import { Spacing } from '../../styles/spacing';
 import { Card } from '../common/Card';
 
-interface DifficultyStats {
-  difficulty: DifficultyLevel;
-  gamesPlayed: number;
-  gamesCompleted: number;
-  bestTime: number; // в секундах
-  averageTime: number; // в секундах
-  winRate: number; // процент
-  totalErrors: number;
-  hintsUsed: number;
-}
-
 interface DifficultyStatsCardProps {
-  difficultyStats: DifficultyStats[];
+  difficultyStats: DifficultyStatistics[];
   testID?: string;
 }
 
-export const DifficultyStatsCard: React.FC<DifficultyStatsCardProps> = ({
+export const DifficultyStatsCard = React.memo<DifficultyStatsCardProps>(({
   difficultyStats,
   testID,
 }) => {
@@ -94,7 +83,11 @@ export const DifficultyStatsCard: React.FC<DifficultyStatsCardProps> = ({
   });
 
   return (
-    <Card style={styles.card} testID={testID}>
+    <Card
+      style={styles.card}
+      testID={testID}
+      accessibilityLabel={`Статистика по уровням сложности. Всего уровней: ${difficultyStats.length}`}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Статистика по уровням</Text>
         <Text style={styles.icon}>📈</Text>
@@ -166,7 +159,7 @@ export const DifficultyStatsCard: React.FC<DifficultyStatsCardProps> = ({
                 <View style={styles.statItem}>
                   <Text style={styles.statLabel}>Подсказки</Text>
                   <Text style={[styles.statValue, { color: Colors.info }]}>
-                    {stats.hintsUsed}
+                    {stats.totalHints}
                   </Text>
                 </View>
               </View>
@@ -195,7 +188,7 @@ export const DifficultyStatsCard: React.FC<DifficultyStatsCardProps> = ({
       ))}
     </Card>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {

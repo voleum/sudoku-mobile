@@ -4,51 +4,22 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
+import { Achievement, AchievementCategory } from '../../../domain/types/GameTypes';
 import { Colors } from '../../styles/colors';
 import { Typography } from '../../styles/typography';
 import { Spacing } from '../../styles/spacing';
 import { Card } from '../common/Card';
-
-export type AchievementType =
-  | 'first_win'          // Первая победа
-  | 'streak_3'           // Серия из 3 побед
-  | 'streak_5'           // Серия из 5 побед
-  | 'streak_10'          // Серия из 10 побед
-  | 'speed_demon'        // Решение за < 5 минут
-  | 'perfectionist'      // Решение без ошибок
-  | 'no_hints'           // Решение без подсказок
-  | 'beginner_master'    // 10 побед на уровне новичок
-  | 'easy_master'        // 10 побед на легком уровне
-  | 'medium_master'      // 10 побед на среднем уровне
-  | 'hard_master'        // 10 побед на сложном уровне
-  | 'expert_master'      // 10 побед на экспертном уровне
-  | 'zen_player'         // 50 игр в дзен-режиме
-  | 'marathon'           // 100 завершенных игр
-  | 'dedication'         // 7 дней подряд игры
-  | 'efficiency'         // Средняя точность > 90%
-  | 'explorer';          // Пробовал все уровни сложности
-
-interface Achievement {
-  id: AchievementType;
-  title: string;
-  description: string;
-  icon: string;
-  isUnlocked: boolean;
-  progress: number;       // 0-100 процентов до разблокировки
-  unlockedAt?: Date;
-  category: 'skill' | 'persistence' | 'exploration' | 'mastery';
-}
 
 interface AchievementsCardProps {
   achievements: Achievement[];
   testID?: string;
 }
 
-export const AchievementsCard: React.FC<AchievementsCardProps> = ({
+export const AchievementsCard = React.memo<AchievementsCardProps>(({
   achievements,
   testID,
 }) => {
-  const getCategoryName = (category: Achievement['category']): string => {
+  const getCategoryName = (category: AchievementCategory): string => {
     switch (category) {
       case 'skill':
         return 'Мастерство';
@@ -63,7 +34,7 @@ export const AchievementsCard: React.FC<AchievementsCardProps> = ({
     }
   };
 
-  const getCategoryColor = (category: Achievement['category']): string => {
+  const getCategoryColor = (category: AchievementCategory): string => {
     switch (category) {
       case 'skill':
         return Colors.warning;
@@ -85,7 +56,7 @@ export const AchievementsCard: React.FC<AchievementsCardProps> = ({
     }
     groups[category].push(achievement);
     return groups;
-  }, {} as Record<Achievement['category'], Achievement[]>);
+  }, {} as Record<AchievementCategory, Achievement[]>);
 
   const unlockedCount = achievements.filter(a => a.isUnlocked).length;
   const totalCount = achievements.length;
@@ -99,7 +70,11 @@ export const AchievementsCard: React.FC<AchievementsCardProps> = ({
   };
 
   return (
-    <Card style={styles.card} testID={testID}>
+    <Card
+      style={styles.card}
+      testID={testID}
+      accessibilityLabel={`Достижения игрока. Разблокировано ${unlockedCount} из ${totalCount} достижений`}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Достижения</Text>
         <View style={styles.headerRight}>
@@ -130,10 +105,10 @@ export const AchievementsCard: React.FC<AchievementsCardProps> = ({
             <Text
               style={[
                 styles.categoryTitle,
-                { color: getCategoryColor(category as Achievement['category']) }
+                { color: getCategoryColor(category as AchievementCategory) }
               ]}
             >
-              {getCategoryName(category as Achievement['category'])}
+              {getCategoryName(category as AchievementCategory)}
             </Text>
             <Text style={styles.categoryCount}>
               {categoryAchievements.filter(a => a.isUnlocked).length}/{categoryAchievements.length}
@@ -204,7 +179,7 @@ export const AchievementsCard: React.FC<AchievementsCardProps> = ({
       ))}
     </Card>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {

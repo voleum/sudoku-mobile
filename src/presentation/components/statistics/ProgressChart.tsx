@@ -4,27 +4,22 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
+import { StatisticsDataPoint } from '../../../domain/types/GameTypes';
 import { Colors } from '../../styles/colors';
 import { Typography } from '../../styles/typography';
 import { Spacing } from '../../styles/spacing';
 import { Card } from '../common/Card';
 
-interface DataPoint {
-  date: Date;
-  value: number;
-  label?: string;
-}
-
 interface ProgressChartProps {
   title: string;
-  data: DataPoint[];
+  data: StatisticsDataPoint[];
   valueFormatter?: (value: number) => string;
   showTrend?: boolean;
   height?: number;
   testID?: string;
 }
 
-export const ProgressChart: React.FC<ProgressChartProps> = ({
+export const ProgressChart = React.memo<ProgressChartProps>(({
   title,
   data,
   valueFormatter = (value) => value.toString(),
@@ -143,7 +138,11 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
   const trendColor = trend === 'up' ? Colors.success : trend === 'down' ? Colors.error : Colors.text.secondary;
 
   return (
-    <Card style={styles.card} testID={testID}>
+    <Card
+      style={styles.card}
+      testID={testID}
+      accessibilityLabel={`График прогресса: ${title}. Тренд: ${trend === 'up' ? 'растет' : trend === 'down' ? 'снижается' : 'стабильный'}`}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
         {showTrend && (
@@ -181,7 +180,7 @@ export const ProgressChart: React.FC<ProgressChartProps> = ({
       </View>
     </Card>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {
