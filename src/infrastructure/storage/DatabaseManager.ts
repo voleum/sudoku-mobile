@@ -160,6 +160,8 @@ export class DatabaseManager {
     return `
       CREATE TABLE IF NOT EXISTS games (
         id TEXT PRIMARY KEY,
+        name TEXT,                             -- Имя сохранения (для именованных сохранений)
+        puzzle_id TEXT NOT NULL,               -- ID исходного пазла (из бизнес-требований)
         difficulty TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'active',
         original_grid TEXT NOT NULL,
@@ -365,6 +367,8 @@ export class DatabaseManager {
       'CREATE INDEX IF NOT EXISTS idx_games_last_played ON games(last_played_at DESC)',
       'CREATE INDEX IF NOT EXISTS idx_games_completed ON games(completed_at DESC)',
       'CREATE INDEX IF NOT EXISTS idx_games_lookup ON games(status, difficulty, last_played_at DESC)',
+      'CREATE INDEX IF NOT EXISTS idx_games_name ON games(name) WHERE name IS NOT NULL',
+      'CREATE INDEX IF NOT EXISTS idx_games_puzzle_id ON games(puzzle_id)',
     ];
   }
 

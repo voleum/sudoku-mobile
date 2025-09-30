@@ -57,6 +57,9 @@ export class SaveGameUseCase {
       if (result.success) {
         // Clean up old auto-saves (keep only recent ones)
         await this.gameSaveRepository.cleanupOldAutoSaves(7); // 7 days
+
+        // Enforce max auto-saves limit (Business Analysis requirement: configurable, default 10)
+        await this.limitAutoSavesCount(10);
       }
 
       return result;
@@ -97,6 +100,20 @@ export class SaveGameUseCase {
         success: false,
         error: 'Save name too long (max 50 characters)'
       };
+    }
+
+    // Check named saves limit (Business Analysis requirement: max 20)
+    try {
+      const namedSavesCount = await this.gameSaveRepository.getNamedSavesCount();
+      if (namedSavesCount >= 20) {
+        return {
+          success: false,
+          error: 'Maximum number of named saves reached (20). Please delete some saves first.'
+        };
+      }
+    } catch (error) {
+      console.error('Error checking named saves count:', error);
+      // Continue with save if count check fails
     }
 
     return this.execute(gameEntity, { name: name.trim() });
@@ -168,6 +185,29 @@ export class SaveGameUseCase {
     }
 
     return recommendations;
+  }
+
+  /**
+   * Limit auto-saves count to specified maximum
+   */
+  private async limitAutoSavesCount(maxCount: number): Promise<void> {
+    try {
+      const autoSavesCount = await this.gameSaveRepository.getAutoSavesCount();
+      if (autoSavesCount > maxCount) {
+        // Get oldest auto-saves to delete
+        const autoSaves = await this.gameSaveRepository.findAutoSaves();
+        const sortedByDate = autoSaves.sort((a, b) => a.lastModified.getTime() - b.lastModified.getTime());
+        const toDelete = sortedByDate.slice(0, autoSavesCount - maxCount);
+
+        // Delete oldest auto-saves
+        for (const save of toDelete) {
+          await this.gameSaveRepository.delete(save.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error limiting auto-saves count:', error);
+      // Continue silently if cleanup fails
+    }
   }
 
   /**

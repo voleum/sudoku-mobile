@@ -29,14 +29,16 @@ export class SQLiteGameSaveRepository implements IGameSaveRepository {
         {
           query: `
             INSERT OR REPLACE INTO games (
-              id, difficulty, status, original_grid, current_grid, solution_grid,
+              id, name, puzzle_id, difficulty, status, original_grid, current_grid, solution_grid,
               created_at, started_at, last_played_at, play_time_seconds,
               pause_time_seconds, total_moves, hints_used, errors_count,
               game_version, metadata
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `,
           params: [
             gameSave.id,
+            gameSave.name || null,
+            gameSave.puzzleId,
             gameSave.difficulty,
             gameSave.isCompleted ? 'completed' : 'active',
             JSON.stringify(gameSave.originalPuzzle),
@@ -151,8 +153,8 @@ export class SQLiteGameSaveRepository implements IGameSaveRepository {
 
       const gameSave: GameSave = {
         id: gameData.id,
-        name: metadata.name,
-        puzzleId: gameData.id, // Using game id as puzzle id for now
+        name: gameData.name || metadata.name, // Prefer direct field, fallback to metadata
+        puzzleId: gameData.puzzle_id || gameData.id, // Prefer direct field, fallback to game id
         currentState: JSON.parse(gameData.current_grid),
         originalPuzzle: JSON.parse(gameData.original_grid),
         difficulty: gameData.difficulty as DifficultyLevel,
@@ -222,7 +224,7 @@ export class SQLiteGameSaveRepository implements IGameSaveRepository {
   async loadNamed(name: string): Promise<LoadOperationResult> {
     try {
       const [result] = await this.dbManager.executeQuery(
-        `SELECT id FROM games WHERE JSON_EXTRACT(metadata, '$.name') = ?`,
+        `SELECT id FROM games WHERE name = ?`,
         [name]
       );
 
@@ -417,7 +419,7 @@ export class SQLiteGameSaveRepository implements IGameSaveRepository {
           last_played_at,
           metadata
         FROM games
-        WHERE JSON_EXTRACT(metadata, '$.name') IS NULL
+        WHERE name IS NULL
         ORDER BY last_played_at DESC
       `);
 
@@ -453,7 +455,7 @@ export class SQLiteGameSaveRepository implements IGameSaveRepository {
           last_played_at,
           metadata
         FROM games
-        WHERE JSON_EXTRACT(metadata, '$.name') IS NOT NULL
+        WHERE name IS NOT NULL
         ORDER BY last_played_at DESC
       `);
 
@@ -554,7 +556,7 @@ export class SQLiteGameSaveRepository implements IGameSaveRepository {
 
       const [result] = await this.dbManager.executeQuery(`
         DELETE FROM games
-        WHERE JSON_EXTRACT(metadata, '$.name') IS NULL
+        WHERE name IS NULL
         AND last_played_at < ?
       `, [cutoffTimestamp]);
 
@@ -582,7 +584,7 @@ export class SQLiteGameSaveRepository implements IGameSaveRepository {
   async getNamedSavesCount(): Promise<number> {
     try {
       const [result] = await this.dbManager.executeQuery(
-        `SELECT COUNT(*) as count FROM games WHERE JSON_EXTRACT(metadata, '$.name') IS NOT NULL`
+        `SELECT COUNT(*) as count FROM games WHERE name IS NOT NULL`
       );
       return result.rows.item(0).count;
     } catch (error) {
@@ -594,7 +596,7 @@ export class SQLiteGameSaveRepository implements IGameSaveRepository {
   async getAutoSavesCount(): Promise<number> {
     try {
       const [result] = await this.dbManager.executeQuery(
-        `SELECT COUNT(*) as count FROM games WHERE JSON_EXTRACT(metadata, '$.name') IS NULL`
+        `SELECT COUNT(*) as count FROM games WHERE name IS NULL`
       );
       return result.rows.item(0).count;
     } catch (error) {
