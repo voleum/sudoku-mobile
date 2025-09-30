@@ -53,6 +53,9 @@ interface GameStore {
   // Auto-save functionality
   triggerAutoSave: () => Promise<void>;
   updateSaveSettings: (settings: Partial<SaveSettings>) => void;
+
+  // Cleanup functionality
+  cleanup: () => void;
 }
 
 // Initialize use cases and repository outside the store
@@ -361,6 +364,23 @@ export const useGameStore = create<GameStore>()(
           } else if (newSettings.autoSaveEnabled && newSettings.autoSaveInterval !== currentSettings.autoSaveInterval) {
             get().enableAutoSave(newSettings.autoSaveInterval);
           }
+        },
+
+        cleanup: (): void => {
+          const { disableAutoSave } = get();
+
+          // Clear auto-save interval to prevent memory leaks
+          disableAutoSave();
+
+          // Reset volatile state
+          set({
+            currentHint: null,
+            isHintActive: false,
+            isLoading: false,
+            lastAutoSaveTime: undefined
+          });
+
+          console.log('GameStore cleanup completed');
         }
       }),
       {

@@ -113,7 +113,10 @@ export class SaveGameUseCase {
       }
     } catch (error) {
       console.error('Error checking named saves count:', error);
-      // Continue with save if count check fails
+      return {
+        success: false,
+        error: 'Unable to verify save limits. Please try again.'
+      };
     }
 
     return this.execute(gameEntity, { name: name.trim() });

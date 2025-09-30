@@ -326,6 +326,41 @@ export class SQLiteGameSaveRepository implements IGameSaveRepository {
     }
   }
 
+  async findAllPaginated(limit: number = 50, offset: number = 0): Promise<SaveSlot[]> {
+    try {
+      const [result] = await this.dbManager.executeQuery(`
+        SELECT
+          id,
+          difficulty,
+          status,
+          created_at,
+          last_played_at,
+          metadata
+        FROM games
+        ORDER BY last_played_at DESC
+        LIMIT ? OFFSET ?
+      `, [limit, offset]);
+
+      const slots: SaveSlot[] = [];
+      for (let i = 0; i < result.rows.length; i++) {
+        const row = result.rows.item(i);
+        const metadata = row.metadata ? JSON.parse(row.metadata) : {};
+        slots.push({
+          id: row.id,
+          name: metadata.name || `Game ${row.difficulty}`,
+          gameId: row.id,
+          createdAt: new Date(row.created_at * 1000),
+          lastModified: new Date(row.last_played_at * 1000),
+          isAutoSave: !metadata.name // If no name, it's an auto-save
+        });
+      }
+      return slots;
+    } catch (error) {
+      console.error('Error finding paginated saves:', error);
+      return [];
+    }
+  }
+
   async findByDifficulty(difficulty: DifficultyLevel): Promise<SaveSlot[]> {
     try {
       const [result] = await this.dbManager.executeQuery(`

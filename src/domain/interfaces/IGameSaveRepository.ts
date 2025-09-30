@@ -19,6 +19,7 @@ export interface IGameSaveRepository {
 
   // Query Operations
   findAll(): Promise<SaveSlot[]>;
+  findAllPaginated(limit?: number, offset?: number): Promise<SaveSlot[]>;
   findByDifficulty(difficulty: DifficultyLevel): Promise<SaveSlot[]>;
   findInProgress(): Promise<SaveSlot[]>;
   findCompleted(): Promise<SaveSlot[]>;

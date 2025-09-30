@@ -102,12 +102,14 @@ export class DatabaseManager {
       await this.db.transaction(async (tx) => {
         // Create tables
         for (const tableSQL of tables) {
+          this.validateSQL(tableSQL);
           await tx.executeSql(tableSQL);
         }
 
         // Create indexes
         for (const indexQueries of indexes) {
           for (const indexSQL of indexQueries) {
+            this.validateSQL(indexSQL);
             await tx.executeSql(indexSQL);
           }
         }
@@ -443,6 +445,43 @@ export class DatabaseManager {
         await tx.executeSql(query, params);
       }
     });
+  }
+
+  /**
+   * Validate SQL query for basic security
+   */
+  private validateSQL(sql: string): void {
+    if (!sql || typeof sql !== 'string') {
+      throw new Error('Invalid SQL: query must be a non-empty string');
+    }
+
+    const trimmedSQL = sql.trim();
+    if (trimmedSQL.length === 0) {
+      throw new Error('Invalid SQL: query cannot be empty');
+    }
+
+    // Basic SQL injection prevention for DDL operations
+    const suspiciousPatterns = [
+      /;\s*DROP\s+/i,
+      /;\s*DELETE\s+/i,
+      /;\s*TRUNCATE\s+/i,
+      /;\s*INSERT\s+/i,
+      /;\s*UPDATE\s+/i,
+      /--.*$/m,
+      /\/\*.*?\*\//s
+    ];
+
+    for (const pattern of suspiciousPatterns) {
+      if (pattern.test(trimmedSQL)) {
+        throw new Error('Invalid SQL: potentially dangerous pattern detected');
+      }
+    }
+
+    // Ensure SQL is appropriate for schema operations
+    const allowedOperations = /^(CREATE|ALTER|DROP)\s+(TABLE|INDEX)/i;
+    if (!allowedOperations.test(trimmedSQL)) {
+      throw new Error('Invalid SQL: only DDL operations allowed in schema management');
+    }
   }
 
   /**
