@@ -515,7 +515,7 @@ export const useGameStore = create<GameStore>()(
           }
 
           // Create new grid with updated value
-          const newGrid = currentGame.grid.map((r, rowIndex) =>
+          const newGrid: CellValue[][] = currentGame.grid.map((r, rowIndex) =>
             r.map((cell, colIndex) =>
               rowIndex === row && colIndex === col ? value : cell
             )
@@ -524,7 +524,7 @@ export const useGameStore = create<GameStore>()(
           // Increment moves count
           const updatedGame: GameEntity = {
             ...currentGame,
-            grid: newGrid as any,
+            grid: newGrid,
             movesCount: currentGame.movesCount + 1
           };
 
