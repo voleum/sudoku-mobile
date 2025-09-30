@@ -243,7 +243,7 @@ export class SaveGameUseCase {
       pausedTime: 0, // This would need to be tracked
       hintsUsed: gameEntity.hintsUsed,
       errorsCount: gameEntity.errorsCount,
-      movesCount: moveHistory.length,
+      movesCount: gameEntity.movesCount,
       lastPlayed: now,
       isCompleted: gameEntity.isCompleted,
       completedAt: gameEntity.isCompleted ? now : undefined,

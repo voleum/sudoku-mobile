@@ -302,6 +302,7 @@ export class LoadGameUseCase {
       difficulty: gameSave.difficulty,
       startTime: gameSave.startTime,
       currentTime: gameSave.totalPlayTime,
+      movesCount: gameSave.movesCount || 0,
       hintsUsed: gameSave.hintsUsed,
       errorsCount: gameSave.errorsCount,
       isCompleted: gameSave.isCompleted,
