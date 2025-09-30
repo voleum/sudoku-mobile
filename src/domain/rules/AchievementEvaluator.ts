@@ -9,10 +9,8 @@
 import {
   Achievement,
   AchievementId,
-  AchievementEvaluationContext,
-  AchievementProgress
+  AchievementEvaluationContext
 } from '../types/AchievementTypes';
-import { DifficultyLevel } from '../types/GameTypes';
 
 /**
  * Evaluation rule result
