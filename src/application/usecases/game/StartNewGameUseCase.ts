@@ -38,6 +38,7 @@ export class StartNewGameUseCase {
       difficulty: puzzle.difficulty,
       startTime: new Date(),
       currentTime: 0,
+      pausedTime: 0,
       movesCount: 0,
       hintsUsed: 0,
       errorsCount: 0,

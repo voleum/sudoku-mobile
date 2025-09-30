@@ -28,6 +28,7 @@ interface GameStore {
   // Timer State
   isTimerRunning: boolean;
   gameTimerInterval?: ReturnType<typeof setInterval>;
+  pauseStartTime?: number; // Timestamp когда началась пауза (для подсчета pausedTime)
 
   // Save/Load State
   availableSaves: SaveSlot[];
@@ -110,6 +111,7 @@ export const useGameStore = create<GameStore>()(
         // Timer State
         isTimerRunning: false,
         gameTimerInterval: undefined,
+        pauseStartTime: undefined,
 
         // Save/Load State
         availableSaves: [],
@@ -465,19 +467,31 @@ export const useGameStore = create<GameStore>()(
         },
 
         pauseTimer: (): void => {
-          const { gameTimerInterval } = get();
-          if (gameTimerInterval) {
+          const { gameTimerInterval, isTimerRunning } = get();
+          if (gameTimerInterval && isTimerRunning) {
             clearInterval(gameTimerInterval);
             set({
               gameTimerInterval: undefined,
-              isTimerRunning: false
+              isTimerRunning: false,
+              pauseStartTime: Date.now() // Запоминаем когда началась пауза
             });
           }
         },
 
         resumeTimer: (): void => {
-          const { isTimerRunning, startTimer } = get();
+          const { isTimerRunning, startTimer, pauseStartTime, currentGame } = get();
           if (!isTimerRunning) {
+            // Если была пауза, обновляем pausedTime
+            if (pauseStartTime && currentGame) {
+              const pauseDuration = Math.floor((Date.now() - pauseStartTime) / 1000);
+              set({
+                currentGame: {
+                  ...currentGame,
+                  pausedTime: currentGame.pausedTime + pauseDuration
+                },
+                pauseStartTime: undefined
+              });
+            }
             startTimer();
           }
         },
@@ -536,7 +550,8 @@ export const useGameStore = create<GameStore>()(
             isLoading: false,
             lastAutoSaveTime: undefined,
             isTimerRunning: false,
-            gameTimerInterval: undefined
+            gameTimerInterval: undefined,
+            pauseStartTime: undefined
           });
 
           console.log('GameStore cleanup completed');
