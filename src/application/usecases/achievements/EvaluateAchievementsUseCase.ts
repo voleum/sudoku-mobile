@@ -85,56 +85,6 @@ export class EvaluateAchievementsUseCase {
   }
 
   /**
-   * Evaluate error-free streak achievements
-   */
-  async evaluateErrorFreeStreak(
-    consecutiveErrorFreeGames: number
-  ): Promise<AchievementEvaluationResult> {
-    try {
-      const currentAchievements = await this.achievementRepository.findAll();
-      const evaluationRules = this.evaluator.evaluateErrorFreeStreak(
-        consecutiveErrorFreeGames,
-        currentAchievements
-      );
-
-      return await this.applyEvaluationRules(evaluationRules, currentAchievements);
-
-    } catch (error) {
-      console.error('Error evaluating error-free streak:', error);
-      return {
-        newlyUnlocked: [],
-        progressUpdated: [],
-        notifications: []
-      };
-    }
-  }
-
-  /**
-   * Evaluate hint-free streak achievements
-   */
-  async evaluateHintFreeStreak(
-    consecutiveHintFreeGames: number
-  ): Promise<AchievementEvaluationResult> {
-    try {
-      const currentAchievements = await this.achievementRepository.findAll();
-      const evaluationRules = this.evaluator.evaluateHintFreeStreak(
-        consecutiveHintFreeGames,
-        currentAchievements
-      );
-
-      return await this.applyEvaluationRules(evaluationRules, currentAchievements);
-
-    } catch (error) {
-      console.error('Error evaluating hint-free streak:', error);
-      return {
-        newlyUnlocked: [],
-        progressUpdated: [],
-        notifications: []
-      };
-    }
-  }
-
-  /**
    * Apply evaluation rules and update achievements in repository
    */
   private async applyEvaluationRules(

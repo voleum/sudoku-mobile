@@ -7,15 +7,12 @@
 import { DifficultyLevel } from './GameTypes';
 
 /**
- * Achievement categories based on business analysis
+ * Achievement categories based on business analysis (1.4-functional-requirements.md)
  */
 export enum AchievementCategory {
   PROGRESSIVE = 'progressive',    // Прогрессивные достижения (Новичок, Любитель, Энтузиаст, Мастер, Гроссмейстер)
   TIME_BASED = 'time_based',      // Достижения по времени (Скоростной демон, Эффективность, Молниеносный)
-  SPECIAL = 'special',            // Особые достижения (Перфекционист, Без подсказок, Марафон, Ежедневно)
-  SKILL = 'skill',                // Достижения за мастерство
-  PERSISTENCE = 'persistence',    // Достижения за настойчивость
-  EXPLORATION = 'exploration'     // Достижения за исследование
+  SPECIAL = 'special'             // Особые достижения (Перфекционист, Без подсказок, Марафон, Ежедневно)
 }
 
 /**
@@ -51,47 +48,27 @@ export enum RewardType {
 }
 
 /**
- * Achievement IDs based on business analysis requirements (1.4.4)
+ * Achievement IDs based strictly on business analysis requirements (1.4-functional-requirements.md section 1.4.4)
+ * ONLY 14 achievements as specified in business requirements
  */
 export enum AchievementId {
-  // Прогрессивные достижения
+  // Прогрессивные достижения (5)
   NEWBIE = 'newbie',                    // Новичок - завершить первую игру
   AMATEUR = 'amateur',                  // Любитель - завершить 10 игр
   ENTHUSIAST = 'enthusiast',            // Энтузиаст - завершить 50 игр
   MASTER = 'master',                    // Мастер - завершить 100 игр
   GRANDMASTER = 'grandmaster',          // Гроссмейстер - завершить 500 игр
 
-  // Достижения по времени
+  // Достижения по времени (3)
   SPEED_DEMON = 'speed_demon',          // Скоростной демон - легкую за <3 минуты
   EFFICIENCY = 'efficiency',            // Эффективность - среднюю за <15 минут
   LIGHTNING = 'lightning',              // Молниеносный - сложную за <30 минут
 
-  // Особые достижения
+  // Особые достижения (4)
   PERFECTIONIST = 'perfectionist',      // Перфекционист - игра без ошибок
   NO_HINTS = 'no_hints',                // Без подсказок - игра без подсказок
   MARATHON = 'marathon',                // Марафон - играть 60+ минут подряд
-  DAILY_PLAYER = 'daily_player',        // Ежедневно - играть 7 дней подряд
-
-  // Дополнительные достижения по сложности
-  BEGINNER_EXPERT = 'beginner_expert',  // Эксперт начального уровня
-  EASY_MASTER = 'easy_master',          // Мастер легкого уровня
-  MEDIUM_MASTER = 'medium_master',      // Мастер среднего уровня
-  HARD_MASTER = 'hard_master',          // Мастер сложного уровня
-  EXPERT_MASTER = 'expert_master',      // Мастер экспертного уровня
-
-  // Достижения за серии
-  STREAK_3 = 'streak_3',                // Серия из 3 побед
-  STREAK_5 = 'streak_5',                // Серия из 5 побед
-  STREAK_10 = 'streak_10',              // Серия из 10 побед
-  STREAK_30 = 'streak_30',              // Серия из 30 побед
-
-  // Достижения за исследование
-  EXPLORER = 'explorer',                // Исследователь - попробовал все уровни
-  VERSATILE = 'versatile',              // Универсал - завершил игры на всех уровнях
-
-  // Достижения за эффективность
-  HINT_FREE_STREAK = 'hint_free_streak', // Серия игр без подсказок
-  ERROR_FREE_STREAK = 'error_free_streak', // Серия игр без ошибок
+  DAILY_PLAYER = 'daily_player'         // Ежедневно - играть 7 дней подряд
 }
 
 /**
