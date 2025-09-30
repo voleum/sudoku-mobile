@@ -122,7 +122,7 @@
 
 ### 3.4 Функциональность
 - [x] Сохранение и загрузка игр ✅ (полное соответствие бизнес-анализу + SQLite + автосохранение + Clean Architecture)
-- [x] Система достижений ✅ (полное соответствие бизнес-анализу + 25 достижений + 6 категорий + SQLite + Zustand store + Clean Architecture)
+- [x] Система достижений ✅ (полное соответствие бизнес-анализу + 14 достижений + 3 категории + SQLite + Zustand store + Clean Architecture)
 - [ ] Таймер и счетчик ходов
 - [ ] Темы оформления
 - [ ] Звуковые эффекты
@@ -204,4 +204,4 @@
 
 ---
 
-*Последнее обновление: 30 сентября 2025 - Система достижений: Реализована полная система достижений согласно бизнес-анализу. Создано 25 достижений в 6 категориях (Progressive, Time-based, Special, Skill, Persistence, Exploration). Domain layer: AchievementTypes (интерфейсы и типы), AchievementEvaluator (бизнес-логика оценки достижений), IAchievementRepository. Infrastructure layer: SQLiteAchievementRepository с полной поддержкой SQLite. Application layer: EvaluateAchievementsUseCase, GetAchievementsUseCase, InitializeAchievementsUseCase. achievementStore (Zustand) с интеграцией в gameStore. Автоматическая оценка достижений при завершении игры. TypeScript компиляция ✅. Прогресс: 75%.*
+*Последнее обновление: 30 сентября 2025 - Система достижений: Реализована полная система достижений согласно бизнес-анализу. Создано 14 достижений в 3 категориях (Progressive, Time-based, Special) - СТРОГО по требованиям раздела 1.4.4. Domain layer: AchievementTypes (интерфейсы и типы), AchievementEvaluator (бизнес-логика оценки достижений), IAchievementRepository. Infrastructure layer: SQLiteAchievementRepository с полной поддержкой SQLite. Application layer: EvaluateAchievementsUseCase, GetAchievementsUseCase, InitializeAchievementsUseCase. achievementStore (Zustand) с интеграцией в gameStore. Автоматическая оценка достижений при завершении игры. TypeScript компиляция ✅. Прогресс: 75%.*
