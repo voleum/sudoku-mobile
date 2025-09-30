@@ -10,3 +10,4 @@ export type {
   NextMoveResult
 } from './ISudokuSolver';
 export type { IHintSystem } from './IHintSystem';
+export type { IAchievementRepository } from './IAchievementRepository';

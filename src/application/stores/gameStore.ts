@@ -15,6 +15,7 @@ import { MoveValidator } from '../../domain/rules';
 import { SaveGameUseCase, LoadGameUseCase, ManageSavesUseCase } from '../usecases/save';
 import { SQLiteGameSaveRepository } from '../../infrastructure/repositories/SQLiteGameSaveRepository';
 import { DatabaseManager } from '../../infrastructure/storage/DatabaseManager';
+import { AchievementEvaluationContext } from '../../domain/types/AchievementTypes';
 
 interface GameStore {
   // Game State
@@ -30,12 +31,19 @@ interface GameStore {
   lastAutoSaveTime?: Date;
   autoSaveInterval?: ReturnType<typeof setInterval>;
 
+  // Session tracking for achievements
+  sessionStartTime?: Date;
+  totalGamesCompleted: number;
+  currentStreak: number;
+  consecutiveDaysPlayed: number;
+
   // Game Actions
   startNewGame: (difficulty: DifficultyLevel) => void;
   selectCell: (row: number, col: number) => void;
   useHint: (level: HintLevel) => Promise<void>;
   clearHint: () => void;
   setCurrentGame: (game: GameEntity) => void;
+  completeGame: (game: GameEntity) => Promise<void>;
 
   // Save/Load Actions
   saveGame: (name?: string) => Promise<SaveOperationResult>;
@@ -100,6 +108,12 @@ export const useGameStore = create<GameStore>()(
         lastAutoSaveTime: undefined,
         autoSaveInterval: undefined,
 
+        // Session tracking for achievements
+        sessionStartTime: new Date(),
+        totalGamesCompleted: 0,
+        currentStreak: 0,
+        consecutiveDaysPlayed: 0,
+
         // Game Actions
         startNewGame: (difficulty) => {
           console.log('Start new game:', difficulty);
@@ -160,6 +174,43 @@ export const useGameStore = create<GameStore>()(
 
         setCurrentGame: (game: GameEntity) => {
           set({ currentGame: game });
+        },
+
+        completeGame: async (game: GameEntity): Promise<void> => {
+          try {
+            // Update game statistics
+            const { totalGamesCompleted, currentStreak, sessionStartTime } = get();
+            set({
+              currentGame: { ...game, isCompleted: true },
+              totalGamesCompleted: totalGamesCompleted + 1,
+              currentStreak: currentStreak + 1
+            });
+
+            // Prepare achievement evaluation context
+            const context: AchievementEvaluationContext = {
+              gameCompleted: true,
+              difficulty: game.difficulty,
+              playTime: game.currentTime,
+              hintsUsed: game.hintsUsed,
+              errorsCount: game.errorsCount,
+              totalGamesCompleted: totalGamesCompleted + 1,
+              currentStreak: currentStreak + 1,
+              sessionDuration: sessionStartTime
+                ? Math.floor((Date.now() - sessionStartTime.getTime()) / 1000)
+                : 0
+            };
+
+            // Dynamically import achievement store to avoid circular dependencies
+            const { useAchievementStore } = await import('./achievementStore');
+            const achievementStore = useAchievementStore.getState();
+
+            // Evaluate achievements
+            await achievementStore.evaluateGameCompletion(context);
+
+            console.log('Game completed and achievements evaluated');
+          } catch (error) {
+            console.error('Error completing game:', error);
+          }
         },
 
         // Save/Load Actions
@@ -259,6 +310,11 @@ export const useGameStore = create<GameStore>()(
           try {
             await initializeUseCases();
             await get().refreshSavesList();
+
+            // Initialize achievement system as well
+            const { useAchievementStore } = await import('./achievementStore');
+            const achievementStore = useAchievementStore.getState();
+            await achievementStore.initialize();
           } catch (error) {
             console.error('Error initializing save system:', error);
           }
