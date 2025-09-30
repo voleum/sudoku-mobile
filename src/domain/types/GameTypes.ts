@@ -39,9 +39,10 @@ export interface GameEntity {
 
 export interface GameMove {
   position: CellPosition;
-  value: CellValue;
-  previousValue: CellValue;
+  previousValue: CellValue;    // 0 если была пустая
+  newValue: CellValue;         // 0 если стираем
   timestamp: Date;
+  moveNumber: number;
 }
 
 // Comprehensive game statistics based on database schema (2.1.4-database-selection.md)
@@ -252,4 +253,85 @@ export interface GameHintUsage {
   timestamp: Date;
   wasHelpful: boolean;
   ratingPenalty: number; // Percentage penalty applied (Business Analysis requirement)
+}
+
+// Game Save/Load System Types (Based on 1.4-functional-requirements.md)
+export interface GameSave {
+  id: string;
+  name?: string;            // Имя сохранения (опционально)
+  puzzleId: string;         // ID исходного пазла
+  currentState: SudokuGrid; // Текущее состояние поля
+  originalPuzzle: SudokuGrid; // Исходный пазл
+  difficulty: DifficultyLevel;
+
+  // Игровая статистика
+  startTime: Date;
+  totalPlayTime: number;    // Секунды
+  pausedTime: number;       // Секунды на паузе
+  hintsUsed: number;
+  errorsCount: number;
+  movesCount: number;
+
+  // Метаданные
+  lastPlayed: Date;
+  isCompleted: boolean;
+  completedAt?: Date;
+
+  // Настройки игры
+  hintsEnabled: boolean;
+  errorCheckEnabled: boolean;
+  timerVisible: boolean;
+
+  // История ходов для отмены
+  moveHistory: GameMove[];
+  historyIndex: number;
+}
+
+
+// Save Management Types
+export interface SaveSlot {
+  id: string;
+  name: string;
+  gameId: string;
+  createdAt: Date;
+  lastModified: Date;
+  thumbnail?: string;  // Base64 encoded image of game state
+  isAutoSave: boolean;
+}
+
+export interface SaveOperationResult {
+  success: boolean;
+  saveId?: string;
+  error?: string;
+}
+
+export interface LoadOperationResult {
+  success: boolean;
+  gameData?: GameSave;
+  error?: string;
+}
+
+// Save Management Configuration
+export interface SaveSettings {
+  autoSaveEnabled: boolean;
+  autoSaveInterval: number;     // seconds
+  maxNamedSaves: number;        // maximum 20 according to business analysis
+  autoDeleteOldSaves: boolean;  // auto-delete saves older than 7 days
+  maxAutoSaves: number;
+}
+
+// Re-export interfaces from domain and application layers
+export type { IGameSaveRepository } from '../interfaces/IGameSaveRepository';
+
+// Forward declaration for use case results (to avoid circular dependencies)
+export interface LoadGameResult {
+  success: boolean;
+  gameEntity?: GameEntity;
+  saveMetadata?: {
+    saveId: string;
+    saveName?: string;
+    lastPlayed: Date;
+    isCompleted: boolean;
+  };
+  error?: string;
 }
