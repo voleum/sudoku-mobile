@@ -102,6 +102,9 @@ export interface ThemeContextType {
 
 /**
  * Настройки автоматической темы
+ *
+ * @future Расширенные настройки для auto-темы согласно бизнес-анализу 1.3.6
+ * Планируется к реализации в следующих итерациях
  */
 export interface AutoThemeSettings {
   // Следовать системным настройкам
@@ -122,6 +125,10 @@ export interface AutoThemeSettings {
 
 /**
  * Системные предпочтения
+ *
+ * @future Поддержка accessibility features согласно бизнес-анализу 1.3.6
+ * Планируется интеграция с prefers-color-scheme, prefers-contrast,
+ * prefers-reduced-motion, prefers-reduced-transparency
  */
 export interface SystemPreferences {
   colorScheme: 'light' | 'dark' | 'no-preference';

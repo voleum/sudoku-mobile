@@ -45,20 +45,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return settings.ui.theme as 'light' | 'dark';
   });
 
-  // Отслеживание изменений системной темы
+  // Отслеживание изменений системной темы и настроек
   useEffect(() => {
     if (settings.ui.theme === 'auto') {
       const newTheme = systemColorScheme === 'dark' ? 'dark' : 'light';
       setActiveTheme(newTheme);
-    }
-  }, [systemColorScheme, settings.ui.theme]);
-
-  // Отслеживание изменений темы в настройках
-  useEffect(() => {
-    if (settings.ui.theme !== 'auto') {
+    } else {
       setActiveTheme(settings.ui.theme as 'light' | 'dark');
     }
-  }, [settings.ui.theme]);
+  }, [systemColorScheme, settings.ui.theme]);
 
   // Получение цветов текущей темы
   const colors: ThemeColors = activeTheme === 'dark' ? darkTheme.colors : lightTheme.colors;
