@@ -10,6 +10,7 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { SudokuBoard } from '../../src/presentation/components/game/SudokuBoard';
 import { NumberPad } from '../../src/presentation/components/game/NumberPad';
 import { SudokuGrid, CellPosition, CellValue } from '../../src/domain/types/GameTypes';
+import { MoveValidator } from '../../src/domain/rules/MoveValidator';
 
 // Mock Dimensions
 jest.mock('react-native/Libraries/Utilities/Dimensions', () => ({
@@ -55,37 +56,22 @@ const GameIntegration: React.FC<GameIntegrationProps> = ({ initialGrid, original
     );
     setGrid(newGrid);
 
-    // Проверяем конфликты
-    const conflicts: CellPosition[] = [];
+    // Используем MoveValidator из domain layer для проверки конфликтов
+    // Соответствует Clean Architecture: использование domain layer в тестах
+    const validationResult = MoveValidator.validateMove(
+      newGrid,
+      originalGrid,
+      row,
+      col,
+      value,
+      { mode: 'immediate', allowErrors: true, strictMode: false }
+    );
 
-    if (value !== 0) {
-      // Проверка строки
-      for (let c = 0; c < 9; c++) {
-        if (c !== col && newGrid[row][c] === value) {
-          conflicts.push({ row, col: c });
-          conflicts.push({ row, col });
-        }
-      }
-
-      // Проверка столбца
-      for (let r = 0; r < 9; r++) {
-        if (r !== row && newGrid[r][col] === value) {
-          conflicts.push({ row: r, col });
-          conflicts.push({ row, col });
-        }
-      }
-
-      // Проверка блока 3x3
-      const boxRow = Math.floor(row / 3) * 3;
-      const boxCol = Math.floor(col / 3) * 3;
-      for (let r = boxRow; r < boxRow + 3; r++) {
-        for (let c = boxCol; c < boxCol + 3; c++) {
-          if ((r !== row || c !== col) && newGrid[r][c] === value) {
-            conflicts.push({ row: r, col: c });
-            conflicts.push({ row, col });
-          }
-        }
-      }
+    // Если есть конфликты, добавляем текущую ячейку и все конфликтующие ячейки
+    const conflicts: CellPosition[] = validationResult.conflicts;
+    if (conflicts.length > 0) {
+      // Добавляем текущую ячейку в список конфликтов
+      conflicts.push(MoveValidator.createCellPosition(row, col));
     }
 
     setConflictCells(conflicts);

@@ -13,7 +13,7 @@ import { SettingsScreen } from '../../src/presentation/screens/Settings/Settings
 import { StatisticsScreen } from '../../src/presentation/screens/Statistics/StatisticsScreen';
 import { useGameStore } from '../../src/application/stores/gameStore';
 import { ThemeProvider } from '../../src/presentation/theme';
-import { Difficulty } from '../../src/domain/types/GameTypes';
+import { Difficulty, GameEntity, DifficultyLevel } from '../../src/domain/types/GameTypes';
 
 // Mock react-native-safe-area-context
 jest.mock('react-native-safe-area-context', () => ({
@@ -77,6 +77,34 @@ jest.mock('../../src/infrastructure/services/AudioService', () => ({
   },
 }));
 
+// Helper function to create mock GameEntity for testing
+let gameCounter = 0;
+function createMockGameEntity(difficulty: DifficultyLevel = 'medium'): GameEntity {
+  gameCounter++;
+  const defaultGrid = Array(9)
+    .fill(null)
+    .map(() => Array(9).fill(0));
+
+  return {
+    id: `test-game-${Date.now()}-${gameCounter}`,
+    puzzleId: `puzzle-${Date.now()}-${gameCounter}`,
+    grid: defaultGrid,
+    originalGrid: defaultGrid,
+    solution: defaultGrid,
+    difficulty,
+    startTime: new Date(),
+    currentTime: 0,
+    pausedTime: 0,
+    movesCount: 0,
+    hintsUsed: 0,
+    errorsCount: 0,
+    isCompleted: false,
+    hintUsageHistory: [],
+    directSolutionHintsUsed: 0,
+    playerProfile: undefined,
+  };
+}
+
 // Helper для рендеринга с провайдерами
 const renderWithProviders = (component: React.ReactElement) => {
   return render(<ThemeProvider>{component}</ThemeProvider>);
@@ -119,8 +147,8 @@ describe('Screen + Store Integration Tests', () => {
     it('should display continue game button when game exists', async () => {
       // Создаем игру в store
       await act(async () => {
-        const startNewGame = useGameStore.getState().startNewGame;
-        await startNewGame('medium' as Difficulty);
+        const setCurrentGame = useGameStore.getState().setCurrentGame;
+        const mockGame = createMockGameEntity('medium'); setCurrentGame(mockGame);
       });
 
       const { getByText } = renderWithProviders(<HomeScreen />);
@@ -134,11 +162,11 @@ describe('Screen + Store Integration Tests', () => {
     it('should load saved game from store', async () => {
       // Создаем и сохраняем игру
       await act(async () => {
-        const startNewGame = useGameStore.getState().startNewGame;
-        await startNewGame('hard' as Difficulty);
+        const setCurrentGame = useGameStore.getState().setCurrentGame;
+        const mockGame = createMockGameEntity('hard'); setCurrentGame(mockGame);
 
-        const setCellValue = useGameStore.getState().setCellValue;
-        setCellValue(0, 0, 5);
+        useGameStore.getState().selectCell(0, 0);
+        useGameStore.getState().makeMove(0, 0, 5);
       });
 
       const gameId = useGameStore.getState().currentGame?.id;
@@ -165,8 +193,8 @@ describe('Screen + Store Integration Tests', () => {
     beforeEach(async () => {
       // Создаем игру перед каждым тестом
       await act(async () => {
-        const startNewGame = useGameStore.getState().startNewGame;
-        await startNewGame('medium' as Difficulty);
+        const setCurrentGame = useGameStore.getState().setCurrentGame;
+        const mockGame = createMockGameEntity('medium'); setCurrentGame(mockGame);
       });
     });
 
@@ -315,8 +343,9 @@ describe('Screen + Store Integration Tests', () => {
       // Создаем несколько завершенных игр для статистики
       for (let i = 0; i < 3; i++) {
         await act(async () => {
-          const startNewGame = useGameStore.getState().startNewGame;
-          await startNewGame((['easy', 'medium', 'hard'] as Difficulty[])[i]);
+          const setCurrentGame = useGameStore.getState().setCurrentGame;
+          const mockGame = createMockGameEntity((['easy', 'medium', 'hard'] as DifficultyLevel[])[i]);
+          setCurrentGame(mockGame);
 
           // Имитируем завершение игры
           useGameStore.setState(state => ({
@@ -363,8 +392,8 @@ describe('Screen + Store Integration Tests', () => {
   describe('Auto-save Integration', () => {
     it('should auto-save game after moves', async () => {
       await act(async () => {
-        const startNewGame = useGameStore.getState().startNewGame;
-        await startNewGame('medium' as Difficulty);
+        const setCurrentGame = useGameStore.getState().setCurrentGame;
+        const mockGame = createMockGameEntity('medium'); setCurrentGame(mockGame);
       });
 
       const { getByTestId } = renderWithProviders(<GameScreen />);
@@ -386,8 +415,8 @@ describe('Screen + Store Integration Tests', () => {
 
     it('should auto-save on pause', async () => {
       await act(async () => {
-        const startNewGame = useGameStore.getState().startNewGame;
-        await startNewGame('hard' as Difficulty);
+        const setCurrentGame = useGameStore.getState().setCurrentGame;
+        const mockGame = createMockGameEntity('hard'); setCurrentGame(mockGame);
       });
 
       const { getByTestId } = renderWithProviders(<GameScreen />);
@@ -407,8 +436,8 @@ describe('Screen + Store Integration Tests', () => {
     it('should maintain state consistency across screen transitions', async () => {
       // Начинаем игру
       await act(async () => {
-        const startNewGame = useGameStore.getState().startNewGame;
-        await startNewGame('medium' as Difficulty);
+        const setCurrentGame = useGameStore.getState().setCurrentGame;
+        const mockGame = createMockGameEntity('medium'); setCurrentGame(mockGame);
       });
 
       const { rerender, getByTestId } = renderWithProviders(<GameScreen />);
@@ -436,8 +465,8 @@ describe('Screen + Store Integration Tests', () => {
 
     it('should sync timer across screen changes', async () => {
       await act(async () => {
-        const startNewGame = useGameStore.getState().startNewGame;
-        await startNewGame('easy' as Difficulty);
+        const setCurrentGame = useGameStore.getState().setCurrentGame;
+        const mockGame = createMockGameEntity('easy'); setCurrentGame(mockGame);
       });
 
       const { rerender } = renderWithProviders(<GameScreen />);

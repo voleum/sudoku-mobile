@@ -177,7 +177,14 @@ export const useGameStore = create<GameStore>()(
             ratingPenalty: getRatingPenalty(level)
           };
 
+          // Increment hintsUsed counter
+          const updatedGame: GameEntity = {
+            ...currentGame,
+            hintsUsed: currentGame.hintsUsed + 1
+          };
+
           set({
+            currentGame: updatedGame,
             currentHint: placeholderHint,
             isHintActive: true
           });
