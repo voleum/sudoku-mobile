@@ -491,6 +491,9 @@ export const useGameStore = create<GameStore>()(
                 },
                 pauseStartTime: undefined
               });
+            } else {
+              // Always clear pauseStartTime even without currentGame
+              set({ pauseStartTime: undefined });
             }
             startTimer();
           }

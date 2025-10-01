@@ -16,4 +16,39 @@ module.exports = {
     '<rootDir>/android/',
     '<rootDir>/ios/',
   ],
+  // Coverage configuration (согласно 2.3.4-testing-strategy.md)
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/**/*.stories.{ts,tsx}',
+    '!src/**/index.{ts,tsx}',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+    // Критические компоненты требуют высокого покрытия
+    './src/infrastructure/services/': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    './src/application/usecases/': {
+      branches: 85,
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
+  },
+  coverageReporters: ['text', 'lcov', 'html'],
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/__tests__/',
+    '/coverage/',
+  ],
 };
