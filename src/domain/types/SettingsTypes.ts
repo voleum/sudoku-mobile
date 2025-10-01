@@ -214,8 +214,8 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
   uiSound: true,
 
   // Дополнительные настройки
-  vibrationEnabled: false,
-  vibrationIntensity: VibrationIntensity.MEDIUM,
+  vibrationEnabled: false, // Выключена по умолчанию
+  vibrationIntensity: VibrationIntensity.MEDIUM, // Средняя интенсивность по умолчанию
 
   // Уведомления (опциональные)
   notificationsEnabled: true,

@@ -41,12 +41,13 @@ export enum SoundType {
 /**
  * Интенсивность вибрации
  * Согласно бизнес-анализу (раздел 1.3 - Тактильная обратная связь)
+ * 5 градаций: OFF (отключена) + LIGHT + MEDIUM + HEAVY (базовые) + специальные паттерны (ERROR, SUCCESS)
  */
 export enum VibrationIntensity {
   OFF = 'off', // Выключена
-  LIGHT = 'light', // Слабая
-  MEDIUM = 'medium', // Средняя
-  STRONG = 'strong', // Сильная
+  LIGHT = 'light', // Легкие действия (10ms, intensity 0.3)
+  MEDIUM = 'medium', // Средние действия (20ms, intensity 0.6)
+  HEAVY = 'heavy', // Важные действия (30ms, intensity 1.0)
 }
 
 /**
@@ -131,13 +132,19 @@ export interface IAudioService {
 
 /**
  * Стандартные паттерны вибрации (миллисекунды)
+ * Согласно бизнес-анализу (раздел 1.3)
  */
 export const VIBRATION_PATTERNS: Record<string, number[]> = {
-  [VibrationIntensity.LIGHT]: [0, 10],
-  [VibrationIntensity.MEDIUM]: [0, 25],
-  [VibrationIntensity.STRONG]: [0, 50],
-  ERROR: [0, 50, 100, 50], // Двойная вибрация для ошибки
-  SUCCESS: [0, 30, 50, 30, 50, 30], // Тройная вибрация для успеха
+  // Базовые градации (согласно бизнес-анализу 1.3)
+  [VibrationIntensity.LIGHT]: [0, 10], // Легкие действия: duration 10ms, intensity 0.3
+  [VibrationIntensity.MEDIUM]: [0, 20], // Средние действия: duration 20ms, intensity 0.6
+  [VibrationIntensity.HEAVY]: [0, 30], // Важные действия: duration 30ms, intensity 1.0
+
+  // Специальные паттерны (согласно бизнес-анализу 1.3)
+  ERROR: [0, 100, 30, 100], // Двойная вибрация для ошибки: 100ms, пауза 30ms, 100ms (intensity 0.7)
+  SUCCESS: [0, 15, 50, 25], // Успех: 15ms, пауза 50ms, 25ms (intensity 0.4 → 0.8)
+
+  // Дополнительный паттерн для достижений (расширение)
   ACHIEVEMENT: [0, 100, 100, 100, 100, 100], // Длинная вибрация для достижения
 };
 
