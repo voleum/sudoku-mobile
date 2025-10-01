@@ -5,13 +5,17 @@
  */
 
 import React, { useEffect } from 'react';
-import { StatusBar, useColorScheme } from 'react-native';
+import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { HomeScreen } from './src/presentation/screens/Home';
 import { useGameStore } from './src/application/stores/gameStore';
+import { ThemeProvider, useTheme } from './src/presentation/theme';
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+/**
+ * AppContent - внутренний компонент для использования темы
+ */
+function AppContent(): React.JSX.Element {
+  const { isDark } = useTheme();
   const cleanup = useGameStore(state => state.cleanup);
 
   // Cleanup on unmount to prevent memory leaks
@@ -22,9 +26,22 @@ function App(): React.JSX.Element {
   }, [cleanup]);
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+    <>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       <HomeScreen />
+    </>
+  );
+}
+
+/**
+ * App - корневой компонент приложения
+ */
+function App(): React.JSX.Element {
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

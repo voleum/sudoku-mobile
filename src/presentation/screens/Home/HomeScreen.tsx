@@ -17,11 +17,12 @@ import {
   QuickStartButton,
   StatsPreview,
 } from '../../components/home';
-import { Colors } from '../../styles/colors';
+import { useTheme } from '../../theme';
 import { Spacing } from '../../styles/spacing';
 
 export const HomeScreen: React.FC = () => {
   const { currentGame, startNewGame } = useGameStore();
+  const { colors } = useTheme();
 
   const difficultyLevels: DifficultyLevel[] = [
     'beginner',
@@ -112,7 +113,7 @@ export const HomeScreen: React.FC = () => {
   const dailyTip = getDailyTip();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfacePrimary }]}>
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -163,7 +164,6 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 
   scrollView: {
