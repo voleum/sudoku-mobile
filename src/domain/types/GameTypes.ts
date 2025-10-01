@@ -28,7 +28,9 @@ export interface GameEntity {
   solution: SudokuGrid;
   difficulty: DifficultyLevel;
   startTime: Date;
-  currentTime: number;
+  currentTime: number; // Время игры в секундах (play_time_seconds в БД)
+  pausedTime: number; // Время на паузе в секундах (pause_time_seconds в БД)
+  movesCount: number; // Счетчик ходов (total_moves в БД)
   hintsUsed: number;
   errorsCount: number;
   isCompleted: boolean;

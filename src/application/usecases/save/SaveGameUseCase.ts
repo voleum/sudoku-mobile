@@ -240,10 +240,10 @@ export class SaveGameUseCase {
       difficulty: gameEntity.difficulty,
       startTime: gameEntity.startTime,
       totalPlayTime: gameEntity.currentTime,
-      pausedTime: 0, // This would need to be tracked
+      pausedTime: gameEntity.pausedTime,
       hintsUsed: gameEntity.hintsUsed,
       errorsCount: gameEntity.errorsCount,
-      movesCount: moveHistory.length,
+      movesCount: gameEntity.movesCount,
       lastPlayed: now,
       isCompleted: gameEntity.isCompleted,
       completedAt: gameEntity.isCompleted ? now : undefined,

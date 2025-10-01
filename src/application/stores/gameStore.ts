@@ -3,6 +3,7 @@ import { devtools, persist } from 'zustand/middleware';
 import {
   GameEntity,
   CellPosition,
+  CellValue,
   DifficultyLevel,
   HintLevel,
   HintResponse,
@@ -24,6 +25,11 @@ interface GameStore {
   currentHint: HintResponse | null;
   isHintActive: boolean;
 
+  // Timer State
+  isTimerRunning: boolean;
+  gameTimerInterval?: ReturnType<typeof setInterval>;
+  pauseStartTime?: number; // Timestamp когда началась пауза (для подсчета pausedTime)
+
   // Save/Load State
   availableSaves: SaveSlot[];
   isLoading: boolean;
@@ -40,10 +46,17 @@ interface GameStore {
   // Game Actions
   startNewGame: (difficulty: DifficultyLevel) => void;
   selectCell: (row: number, col: number) => void;
+  makeMove: (row: number, col: number, value: CellValue) => void;
   useHint: (level: HintLevel) => Promise<void>;
   clearHint: () => void;
   setCurrentGame: (game: GameEntity) => void;
   completeGame: (game: GameEntity) => Promise<void>;
+
+  // Timer Actions
+  startTimer: () => void;
+  pauseTimer: () => void;
+  resumeTimer: () => void;
+  stopTimer: () => void;
 
   // Save/Load Actions
   saveGame: (name?: string) => Promise<SaveOperationResult>;
@@ -94,6 +107,11 @@ export const useGameStore = create<GameStore>()(
         selectedCell: null,
         currentHint: null,
         isHintActive: false,
+
+        // Timer State
+        isTimerRunning: false,
+        gameTimerInterval: undefined,
+        pauseStartTime: undefined,
 
         // Save/Load State
         availableSaves: [],
@@ -422,8 +440,105 @@ export const useGameStore = create<GameStore>()(
           }
         },
 
+        // Timer Actions
+        startTimer: (): void => {
+          const { stopTimer } = get();
+
+          // Stop any existing timer first
+          stopTimer();
+
+          // Create new timer that increments every second
+          const intervalId = setInterval(() => {
+            const { currentGame } = get();
+            if (currentGame && !currentGame.isCompleted) {
+              set({
+                currentGame: {
+                  ...currentGame,
+                  currentTime: currentGame.currentTime + 1
+                }
+              });
+            }
+          }, 1000);
+
+          set({
+            gameTimerInterval: intervalId,
+            isTimerRunning: true
+          });
+        },
+
+        pauseTimer: (): void => {
+          const { gameTimerInterval, isTimerRunning } = get();
+          if (gameTimerInterval && isTimerRunning) {
+            clearInterval(gameTimerInterval);
+            set({
+              gameTimerInterval: undefined,
+              isTimerRunning: false,
+              pauseStartTime: Date.now() // Запоминаем когда началась пауза
+            });
+          }
+        },
+
+        resumeTimer: (): void => {
+          const { isTimerRunning, startTimer, pauseStartTime, currentGame } = get();
+          if (!isTimerRunning) {
+            // Если была пауза, обновляем pausedTime
+            if (pauseStartTime && currentGame) {
+              const pauseDuration = Math.floor((Date.now() - pauseStartTime) / 1000);
+              set({
+                currentGame: {
+                  ...currentGame,
+                  pausedTime: currentGame.pausedTime + pauseDuration
+                },
+                pauseStartTime: undefined
+              });
+            }
+            startTimer();
+          }
+        },
+
+        stopTimer: (): void => {
+          const { gameTimerInterval } = get();
+          if (gameTimerInterval) {
+            clearInterval(gameTimerInterval);
+            set({
+              gameTimerInterval: undefined,
+              isTimerRunning: false
+            });
+          }
+        },
+
+        // makeMove: increment moves counter
+        makeMove: (row: number, col: number, value: CellValue): void => {
+          const { currentGame, triggerAutoSave } = get();
+          if (!currentGame) {
+            return;
+          }
+
+          // Create new grid with updated value
+          const newGrid: CellValue[][] = currentGame.grid.map((r, rowIndex) =>
+            r.map((cell, colIndex) =>
+              rowIndex === row && colIndex === col ? value : cell
+            )
+          );
+
+          // Increment moves count
+          const updatedGame: GameEntity = {
+            ...currentGame,
+            grid: newGrid,
+            movesCount: currentGame.movesCount + 1
+          };
+
+          set({ currentGame: updatedGame });
+
+          // Trigger auto-save after move
+          triggerAutoSave().catch(err => console.error('Auto-save after move failed:', err));
+        },
+
         cleanup: (): void => {
-          const { disableAutoSave } = get();
+          const { disableAutoSave, stopTimer } = get();
+
+          // Stop timer to prevent memory leaks
+          stopTimer();
 
           // Clear auto-save interval to prevent memory leaks
           disableAutoSave();
@@ -433,7 +548,10 @@ export const useGameStore = create<GameStore>()(
             currentHint: null,
             isHintActive: false,
             isLoading: false,
-            lastAutoSaveTime: undefined
+            lastAutoSaveTime: undefined,
+            isTimerRunning: false,
+            gameTimerInterval: undefined,
+            pauseStartTime: undefined
           });
 
           console.log('GameStore cleanup completed');
