@@ -39,7 +39,8 @@ export const GameControls: React.FC<GameControlsProps> = memo(({
     icon: string,
     isActive = false,
     isDisabled = false,
-    badge?: number
+    badge?: number,
+    buttonTestID?: string
   ) => {
     const buttonDisabled = disabled || isDisabled || !onPress;
 
@@ -59,7 +60,7 @@ export const GameControls: React.FC<GameControlsProps> = memo(({
           disabled: buttonDisabled,
           selected: isActive,
         }}
-        testID={`${testID || 'game-controls'}-${key}`}
+        testID={buttonTestID || `${key}-button`}
       >
         <View style={styles.buttonContent}>
           <Text
@@ -98,7 +99,7 @@ export const GameControls: React.FC<GameControlsProps> = memo(({
   };
 
   return (
-    <View style={styles.container} testID={testID || 'game-controls'}>
+    <View style={styles.container}>
       {/* Первый ряд: Заметки и Подсказка */}
       <View style={styles.row}>
         {renderControlButton(
@@ -107,7 +108,9 @@ export const GameControls: React.FC<GameControlsProps> = memo(({
           'Заметки',
           '✎',
           notesMode,
-          false
+          false,
+          undefined,
+          'notes-button'
         )}
         {renderControlButton(
           'hint',
@@ -116,7 +119,8 @@ export const GameControls: React.FC<GameControlsProps> = memo(({
           '💡',
           false,
           hintsRemaining === 0,
-          hintsRemaining
+          hintsRemaining,
+          'hint-button'
         )}
       </View>
 
@@ -128,7 +132,9 @@ export const GameControls: React.FC<GameControlsProps> = memo(({
           'Отменить',
           '↶',
           false,
-          !canUndo
+          !canUndo,
+          undefined,
+          'undo-button'
         )}
         {renderControlButton(
           'clear',
@@ -136,7 +142,9 @@ export const GameControls: React.FC<GameControlsProps> = memo(({
           'Очистить',
           '🗑',
           false,
-          false
+          false,
+          undefined,
+          'clear-button'
         )}
       </View>
     </View>

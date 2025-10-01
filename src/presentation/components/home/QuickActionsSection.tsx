@@ -32,7 +32,7 @@ export const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({
           pressable
           onPress={action.onPress}
           style={styles.actionCard}
-          testID={`quick-action-${action.id}`}
+          testID={`${action.id}-button`}
         >
           <Text style={styles.emoji}>{action.emoji}</Text>
           <Text style={styles.title}>{action.title}</Text>
