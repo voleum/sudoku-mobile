@@ -6,35 +6,7 @@
  */
 
 import { useGameStore } from '../../src/application/stores/gameStore';
-import { Difficulty, GameEntity, DifficultyLevel } from '../../src/domain/types/GameTypes';
-
-// Mock MMKV storage
-jest.mock('react-native-mmkv', () => ({
-  MMKV: jest.fn().mockImplementation(() => ({
-    getString: jest.fn(),
-    set: jest.fn(),
-    delete: jest.fn(),
-    getAllKeys: jest.fn(() => []),
-    clearAll: jest.fn(),
-  })),
-}));
-
-// Mock SQLite
-const mockExecuteSql = jest.fn((sql, params, successCallback) => {
-  if (successCallback) {
-    successCallback(null, { rows: { length: 0, item: () => ({}) } });
-  }
-});
-
-jest.mock('react-native-sqlite-storage', () => ({
-  openDatabase: jest.fn(() => ({
-    transaction: jest.fn((callback) => {
-      callback({ executeSql: mockExecuteSql });
-    }),
-    executeSql: mockExecuteSql,
-  })),
-  enablePromise: jest.fn(),
-}));
+import { GameEntity, DifficultyLevel, HintLevel } from '../../src/domain/types/GameTypes';
 
 // Helper function to create mock GameEntity for testing
 let gameCounter = 0;
@@ -103,7 +75,7 @@ describe('Database Integration Tests', () => {
       // Делаем серию операций
       for (let i = 0; i < 5; i++) {
         useGameStore.getState().selectCell(i, 0);
-        useGameStore.getState().makeMove(i, 0, i + 1);
+        useGameStore.getState().makeMove(i, 0, (i + 1) as any);
       }
 
       const game = useGameStore.getState().currentGame;
@@ -153,7 +125,7 @@ describe('Database Integration Tests', () => {
       const initialHints = useGameStore.getState().currentGame?.hintsUsed || 0;
 
       // Используем подсказку
-      await useGameStore.getState().useHint('basic');
+      await useGameStore.getState().useHint(HintLevel.GENERAL_DIRECTION);
 
       const currentHints = useGameStore.getState().currentGame?.hintsUsed || 0;
       expect(currentHints).toBeGreaterThan(initialHints);
@@ -182,12 +154,12 @@ describe('Database Integration Tests', () => {
       // Пытаемся установить невалидное значение
       expect(() => {
         useGameStore.getState().selectCell(0, 0);
-        useGameStore.getState().makeMove(0, 0, 10);
+        useGameStore.getState().makeMove(0, 0, 10 as any);
       }).not.toThrow();
 
       expect(() => {
         useGameStore.getState().selectCell(0, 0);
-        useGameStore.getState().makeMove(0, 0, -1);
+        useGameStore.getState().makeMove(0, 0, -1 as any);
       }).not.toThrow();
     });
   });
@@ -199,7 +171,7 @@ describe('Database Integration Tests', () => {
       // Делаем несколько ходов
       for (let i = 0; i < 10; i++) {
         useGameStore.getState().selectCell(i % 9, Math.floor(i / 9));
-        useGameStore.getState().makeMove(i % 9, Math.floor(i / 9), (i % 9) + 1);
+        useGameStore.getState().makeMove(i % 9, Math.floor(i / 9), ((i % 9) + 1) as any);
       }
 
       // Автосохранение должно быть вызвано
@@ -213,34 +185,34 @@ describe('Database Integration Tests', () => {
     it('should handle rapid successive operations', async () => {
       const mockGame = createMockGameEntity('hard'); useGameStore.getState().setCurrentGame(mockGame);
 
-      const startTime = performance.now();
+      const startTime = Date.now();
 
       // Выполняем 50 операций подряд
       for (let i = 0; i < 50; i++) {
         const row = i % 9;
         const col = Math.floor(i / 9) % 9;
         useGameStore.getState().selectCell(row, col);
-        useGameStore.getState().makeMove(row, col, (i % 9) + 1);
+        useGameStore.getState().makeMove(row, col, ((i % 9) + 1) as any);
       }
 
-      const operationTime = performance.now() - startTime;
+      const operationTime = Date.now() - startTime;
 
       // Операции должны выполниться быстро (< 1000ms для 50 операций на CI)
       expect(operationTime).toBeLessThan(1000);
     });
 
     it('should efficiently handle game state updates', async () => {
-      const startTime = performance.now();
+      const startTime = Date.now();
 
       // Создаем и обновляем игру
       const mockGame = createMockGameEntity('expert'); useGameStore.getState().setCurrentGame(mockGame);
 
       for (let i = 0; i < 20; i++) {
         useGameStore.getState().selectCell(i % 9, Math.floor(i / 9));
-        useGameStore.getState().makeMove(i % 9, Math.floor(i / 9), (i % 9) + 1);
+        useGameStore.getState().makeMove(i % 9, Math.floor(i / 9), ((i % 9) + 1) as any);
       }
 
-      const totalTime = performance.now() - startTime;
+      const totalTime = Date.now() - startTime;
 
       // Общее время должно быть разумным (< 2000ms на CI)
       expect(totalTime).toBeLessThan(2000);
@@ -273,7 +245,7 @@ describe('Database Integration Tests', () => {
         }
 
         // Игра должна быть отмечена как завершенная
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise<void>(resolve => setTimeout(resolve, 100));
         expect(useGameStore.getState().currentGame?.isCompleted).toBe(true);
       }
     });

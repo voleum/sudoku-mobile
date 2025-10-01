@@ -13,57 +13,8 @@ import { SettingsScreen } from '../../src/presentation/screens/Settings/Settings
 import { StatisticsScreen } from '../../src/presentation/screens/Statistics/StatisticsScreen';
 import { useGameStore } from '../../src/application/stores/gameStore';
 import { ThemeProvider } from '../../src/presentation/theme';
-import { Difficulty, GameEntity, DifficultyLevel } from '../../src/domain/types/GameTypes';
+import { GameEntity, DifficultyLevel } from '../../src/domain/types/GameTypes';
 
-// Mock react-native-safe-area-context
-jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
-  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
-  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
-}));
-
-// Mock Dimensions
-jest.mock('react-native/Libraries/Utilities/Dimensions', () => ({
-  get: () => ({ width: 375, height: 812 }),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-}));
-
-// Mock PixelRatio
-jest.mock('react-native/Libraries/Utilities/PixelRatio', () => ({
-  get: () => 2,
-  getFontScale: () => 1,
-  getPixelSizeForLayoutSize: (size: number) => size * 2,
-  roundToNearestPixel: (size: number) => Math.round(size),
-}));
-
-// Mock MMKV storage
-jest.mock('react-native-mmkv', () => ({
-  MMKV: jest.fn().mockImplementation(() => ({
-    getString: jest.fn(),
-    set: jest.fn(),
-    delete: jest.fn(),
-    getAllKeys: jest.fn(() => []),
-    clearAll: jest.fn(),
-  })),
-}));
-
-// Mock SQLite
-jest.mock('react-native-sqlite-storage', () => ({
-  openDatabase: jest.fn(() => ({
-    transaction: jest.fn((callback) => {
-      callback({
-        executeSql: jest.fn((sql, params, success) => {
-          if (success) {
-            success(null, { rows: { length: 0, item: () => ({}) } });
-          }
-        }),
-      });
-    }),
-    executeSql: jest.fn(),
-  })),
-  enablePromise: jest.fn(),
-}));
 
 // Mock AudioService
 jest.mock('../../src/infrastructure/services/AudioService', () => ({
@@ -124,7 +75,7 @@ describe('Screen + Store Integration Tests', () => {
 
   describe('HomeScreen + GameStore Integration', () => {
     it('should start new game and update store', async () => {
-      const { getByText, getByTestId } = renderWithProviders(<HomeScreen />);
+      const { getByText } = renderWithProviders(<HomeScreen />);
 
       // Начальное состояние - нет активной игры
       const store = useGameStore.getState();
@@ -201,7 +152,7 @@ describe('Screen + Store Integration Tests', () => {
     it('should update store when making moves', async () => {
       const { getByTestId } = renderWithProviders(<GameScreen />);
 
-      const initialMoveCount = useGameStore.getState().currentGame?.moveCount || 0;
+      const initialMoveCount = useGameStore.getState().currentGame?.movesCount || 0;
 
       // Выбираем ячейку и вводим число
       const cell = getByTestId('sudoku-cell-0-0');
@@ -215,7 +166,7 @@ describe('Screen + Store Integration Tests', () => {
       });
 
       await waitFor(() => {
-        const updatedMoveCount = useGameStore.getState().currentGame?.moveCount || 0;
+        const updatedMoveCount = useGameStore.getState().currentGame?.movesCount || 0;
         expect(updatedMoveCount).toBeGreaterThan(initialMoveCount);
       });
     });
@@ -223,15 +174,15 @@ describe('Screen + Store Integration Tests', () => {
     it('should update elapsed time in store', async () => {
       renderWithProviders(<GameScreen />);
 
-      const initialTime = useGameStore.getState().currentGame?.elapsedTime || 0;
+      const initialTime = useGameStore.getState().currentGame?.currentTime || 0;
 
       // Ждем некоторое время для обновления таймера
       await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 1100));
+        await new Promise<void>(resolve => setTimeout(resolve, 1100));
       });
 
       await waitFor(() => {
-        const currentTime = useGameStore.getState().currentGame?.elapsedTime || 0;
+        const currentTime = useGameStore.getState().currentGame?.currentTime || 0;
         expect(currentTime).toBeGreaterThan(initialTime);
       }, { timeout: 2000 });
     });
@@ -263,7 +214,7 @@ describe('Screen + Store Integration Tests', () => {
     it('should pause game and update store', async () => {
       const { getByTestId } = renderWithProviders(<GameScreen />);
 
-      expect(useGameStore.getState().currentGame?.paused).toBe(false);
+      expect(useGameStore.getState().isTimerRunning).toBe(true);
 
       // Ставим игру на паузу
       const pauseButton = getByTestId('game-control-pause');
@@ -272,7 +223,7 @@ describe('Screen + Store Integration Tests', () => {
       });
 
       await waitFor(() => {
-        expect(useGameStore.getState().currentGame?.paused).toBe(true);
+        expect(useGameStore.getState().isTimerRunning).toBe(false);
       });
     });
 
@@ -351,9 +302,9 @@ describe('Screen + Store Integration Tests', () => {
           useGameStore.setState(state => ({
             currentGame: state.currentGame ? {
               ...state.currentGame,
-              completed: true,
-              elapsedTime: 300 + i * 100,
-              moveCount: 81,
+              isCompleted: true,
+              currentTime: 300 + i * 100,
+              movesCount: 81,
             } : null,
           }));
         });
@@ -408,8 +359,8 @@ describe('Screen + Store Integration Tests', () => {
 
       // Ждем срабатывания автосохранения
       await waitFor(() => {
-        const moveCount = useGameStore.getState().currentGame?.moveCount || 0;
-        expect(moveCount).toBeGreaterThanOrEqual(5);
+        const movesCount = useGameStore.getState().currentGame?.movesCount || 0;
+        expect(movesCount).toBeGreaterThanOrEqual(5);
       }, { timeout: 3000 });
     });
 
@@ -427,7 +378,7 @@ describe('Screen + Store Integration Tests', () => {
       });
 
       await waitFor(() => {
-        expect(useGameStore.getState().currentGame?.paused).toBe(true);
+        expect(useGameStore.getState().isTimerRunning).toBe(false);
       });
     });
   });
@@ -472,14 +423,14 @@ describe('Screen + Store Integration Tests', () => {
       const { rerender } = renderWithProviders(<GameScreen />);
 
       // Запоминаем время
-      const initialTime = useGameStore.getState().currentGame?.elapsedTime || 0;
+      const initialTime = useGameStore.getState().currentGame?.currentTime || 0;
 
       // Переключаемся на SettingsScreen
       rerender(<ThemeProvider><SettingsScreen /></ThemeProvider>);
 
       // Ждем секунду
       await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 1100));
+        await new Promise<void>(resolve => setTimeout(resolve, 1100));
       });
 
       // Возвращаемся на GameScreen
@@ -487,7 +438,7 @@ describe('Screen + Store Integration Tests', () => {
 
       // Время должно продолжать идти
       await waitFor(() => {
-        const currentTime = useGameStore.getState().currentGame?.elapsedTime || 0;
+        const currentTime = useGameStore.getState().currentGame?.currentTime || 0;
         expect(currentTime).toBeGreaterThan(initialTime);
       }, { timeout: 2000 });
     });

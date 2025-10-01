@@ -6,26 +6,11 @@
  */
 
 import React, { useState } from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { SudokuBoard } from '../../src/presentation/components/game/SudokuBoard';
 import { NumberPad } from '../../src/presentation/components/game/NumberPad';
 import { SudokuGrid, CellPosition, CellValue } from '../../src/domain/types/GameTypes';
-import { MoveValidator } from '../../src/domain/rules/MoveValidator';
-
-// Mock Dimensions
-jest.mock('react-native/Libraries/Utilities/Dimensions', () => ({
-  get: () => ({ width: 375, height: 812 }),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-}));
-
-// Mock PixelRatio
-jest.mock('react-native/Libraries/Utilities/PixelRatio', () => ({
-  get: () => 2,
-  getFontScale: () => 1,
-  getPixelSizeForLayoutSize: (size: number) => size * 2,
-  roundToNearestPixel: (size: number) => Math.round(size),
-}));
+import { MoveValidator } from '../../src/domain/rules';
 
 // Тестовый компонент с интеграцией SudokuBoard + NumberPad
 interface GameIntegrationProps {
@@ -385,11 +370,11 @@ describe('SudokuGrid Integration Tests', () => {
     it('should render efficiently with full grid', () => {
       const { grid, originalGrid } = createTestGrid();
 
-      const startTime = performance.now();
+      const startTime = Date.now();
       const { getByTestId } = render(
         <GameIntegration initialGrid={grid} originalGrid={originalGrid} />
       );
-      const renderTime = performance.now() - startTime;
+      const renderTime = Date.now() - startTime;
 
       // Рендеринг должен занимать менее 100ms
       expect(renderTime).toBeLessThan(100);
@@ -405,7 +390,7 @@ describe('SudokuGrid Integration Tests', () => {
         <GameIntegration initialGrid={emptyGrid} originalGrid={emptyGrid} />
       );
 
-      const startTime = performance.now();
+      const startTime = Date.now();
 
       // Выполняем 20 операций обновления
       for (let i = 0; i < 20; i++) {
@@ -415,7 +400,7 @@ describe('SudokuGrid Integration Tests', () => {
         fireEvent.press(getByTestId(`number-pad-button-${(i % 9) + 1}`));
       }
 
-      const operationTime = performance.now() - startTime;
+      const operationTime = Date.now() - startTime;
 
       // Все операции должны выполниться за разумное время (< 500ms)
       expect(operationTime).toBeLessThan(500);

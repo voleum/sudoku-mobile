@@ -1,5 +1,6 @@
 module.exports = {
   preset: 'react-native',
+  setupFiles: ['<rootDir>/__tests__/jest.setup.js'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@components/(.*)$': '<rootDir>/src/presentation/components/$1',
