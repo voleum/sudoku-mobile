@@ -1,4 +1,5 @@
 import { DifficultyLevel } from './GameTypes';
+import { VibrationIntensity } from './AudioTypes';
 
 // Базовые перечисления для настроек
 export enum ThemeType {
@@ -98,26 +99,32 @@ export interface UISettings {
 }
 
 export interface AudioSettings {
-  // Звуковые эффекты
+  // Основные настройки
   soundEnabled: boolean;
   soundVolume: number;        // 0-100
 
-  // Типы звуков
+  // Типы звуков (индивидуальное включение/выключение)
   cellPlacementSound: boolean;
   errorSound: boolean;
   successSound: boolean;
   hintSound: boolean;
   completionSound: boolean;
+  achievementSound: boolean;  // Звук достижения
+  uiSound: boolean;           // Звуки UI (кнопки, меню)
 
-  // Уведомления
-  notificationsEnabled: boolean;
-  dailyReminder: boolean;
-  reminderTime: string;      // "20:00"
-  achievementNotifications: boolean;
+  // Дополнительные настройки
+  vibrationEnabled: boolean;  // Тактильная обратная связь
+  vibrationIntensity: VibrationIntensity; // Интенсивность вибрации
 
-  // Дзен-режим и релаксация
-  zenAmbientSounds: boolean;  // Фоновые звуки для дзен-режима
-  zenMusicEnabled: boolean;   // Медитативная музыка
+  // Уведомления (расширенная функциональность - @future)
+  notificationsEnabled?: boolean;
+  dailyReminder?: boolean;
+  reminderTime?: string;      // "20:00"
+  achievementNotifications?: boolean;
+
+  // Дзен-режим и релаксация (@future)
+  zenAmbientSounds?: boolean;  // Фоновые звуки для дзен-режима
+  zenMusicEnabled?: boolean;   // Медитативная музыка
 }
 
 export interface AdvancedSettings {
@@ -193,17 +200,30 @@ export const DEFAULT_UI_SETTINGS: UISettings = {
 };
 
 export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
+  // Основные настройки
   soundEnabled: true,
   soundVolume: 70,
+
+  // Типы звуков
   cellPlacementSound: true,
   errorSound: true,
   successSound: true,
   hintSound: true,
   completionSound: true,
+  achievementSound: true,
+  uiSound: true,
+
+  // Дополнительные настройки
+  vibrationEnabled: false, // Выключена по умолчанию
+  vibrationIntensity: VibrationIntensity.MEDIUM, // Средняя интенсивность по умолчанию
+
+  // Уведомления (опциональные)
   notificationsEnabled: true,
   dailyReminder: false,
   reminderTime: '20:00',
   achievementNotifications: true,
+
+  // Дзен-режим (опциональные)
   zenAmbientSounds: false,
   zenMusicEnabled: false,
 };

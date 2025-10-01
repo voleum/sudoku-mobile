@@ -463,7 +463,7 @@ export const SettingsScreen: React.FC = () => {
           <SettingToggle
             title="Уведомления включены"
             description="Разрешить push-уведомления"
-            value={settings.audio.notificationsEnabled}
+            value={settings.audio.notificationsEnabled || false}
             onValueChange={(value) => updateAudioSettings({ notificationsEnabled: value })}
             testID="settings-notifications-enabled"
           />
@@ -471,7 +471,7 @@ export const SettingsScreen: React.FC = () => {
           <SettingToggle
             title="Ежедневное напоминание"
             description="Напоминать о игре каждый день"
-            value={settings.audio.dailyReminder}
+            value={settings.audio.dailyReminder || false}
             onValueChange={(value) => updateAudioSettings({ dailyReminder: value })}
             testID="settings-daily-reminder"
           />
@@ -479,7 +479,7 @@ export const SettingsScreen: React.FC = () => {
           <SettingToggle
             title="Уведомления о достижениях"
             description="Уведомлять о получении новых достижений"
-            value={settings.audio.achievementNotifications}
+            value={settings.audio.achievementNotifications || false}
             onValueChange={(value) => updateAudioSettings({ achievementNotifications: value })}
             testID="settings-achievement-notifications"
           />
@@ -487,7 +487,7 @@ export const SettingsScreen: React.FC = () => {
           <SettingToggle
             title="Фоновые звуки дзен-режима"
             description="Успокаивающие звуки для релаксации в дзен-режиме"
-            value={settings.audio.zenAmbientSounds}
+            value={settings.audio.zenAmbientSounds || false}
             onValueChange={(value) => updateAudioSettings({ zenAmbientSounds: value })}
             testID="settings-zen-ambient-sounds"
           />
@@ -495,7 +495,7 @@ export const SettingsScreen: React.FC = () => {
           <SettingToggle
             title="Медитативная музыка"
             description="Мягкая музыка для концентрации в дзен-режиме"
-            value={settings.audio.zenMusicEnabled}
+            value={settings.audio.zenMusicEnabled || false}
             onValueChange={(value) => updateAudioSettings({ zenMusicEnabled: value })}
             testID="settings-zen-music"
           />
