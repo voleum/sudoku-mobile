@@ -25,10 +25,11 @@ import {
   Language,
 } from '../../../domain/types/SettingsTypes';
 import { DifficultyLevel } from '../../../domain/types/GameTypes';
-import { Colors } from '../../styles/colors';
+import { useTheme } from '../../theme';
 import { Spacing } from '../../styles/spacing';
 
 export const SettingsScreen: React.FC = () => {
+  const { colors } = useTheme();
   const {
     settings,
     currentProfile,
@@ -145,7 +146,7 @@ export const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfacePrimary }]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Профили настроек */}
         <SettingsSection
@@ -591,7 +592,6 @@ export const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 
   scrollView: {
