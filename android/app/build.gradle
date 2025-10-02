@@ -92,17 +92,41 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            // Release signing configuration
+            // Для production сборки необходимо создать keystore:
+            // keytool -genkeypair -v -storetype PKCS12 -keystore sudoku-release.keystore \
+            //   -alias sudoku-key-alias -keyalg RSA -keysize 2048 -validity 10000
+            //
+            // Затем создайте android/gradle.properties с параметрами:
+            // SUDOKU_RELEASE_STORE_FILE=sudoku-release.keystore
+            // SUDOKU_RELEASE_KEY_ALIAS=sudoku-key-alias
+            // SUDOKU_RELEASE_STORE_PASSWORD=your_store_password
+            // SUDOKU_RELEASE_KEY_PASSWORD=your_key_password
+            if (project.hasProperty('SUDOKU_RELEASE_STORE_FILE')) {
+                storeFile file(SUDOKU_RELEASE_STORE_FILE)
+                storePassword SUDOKU_RELEASE_STORE_PASSWORD
+                keyAlias SUDOKU_RELEASE_KEY_ALIAS
+                keyPassword SUDOKU_RELEASE_KEY_PASSWORD
+            } else {
+                // Fallback to debug signing if release keystore not configured
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // Shrink resources для уменьшения размера APK/AAB
+            shrinkResources enableProguardInReleaseBuilds
         }
     }
 }

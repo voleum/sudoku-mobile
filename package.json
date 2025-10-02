@@ -17,7 +17,15 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "typecheck": "tsc --noEmit",
-    "clean": "cd android && ./gradlew clean && cd ../ios && xcodebuild clean"
+    "clean": "cd android && ./gradlew clean && cd ../ios && xcodebuild clean",
+    "ios:device": "react-native run-ios --device",
+    "ios:release": "react-native run-ios --configuration Release --device",
+    "ios:build": "./scripts/build-ios-release.sh",
+    "android:device": "react-native run-android",
+    "android:release": "./scripts/build-android-release.sh apk",
+    "android:bundle": "./scripts/build-android-release.sh aab",
+    "android:build": "./scripts/build-android-release.sh both",
+    "device:list": "echo '\n--- iOS Devices ---\n' && xcrun xctrace list devices && echo '\n--- Android Devices ---\n' && adb devices"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.24.0",
