@@ -46,7 +46,7 @@ export const NumberPad: React.FC<NumberPadProps> = memo(({
           disabled: disabled || isComplete,
           selected: false,
         }}
-        testID={`${testID || 'number-pad'}-button-${number}`}
+        testID={`number-pad-button-${number}`}
       >
         <Text
           style={[
@@ -85,7 +85,7 @@ export const NumberPad: React.FC<NumberPadProps> = memo(({
       accessibilityRole="button"
       accessibilityLabel="Стереть"
       accessibilityState={{ disabled }}
-      testID={`${testID || 'number-pad'}-erase-button`}
+      testID={`number-pad-button-0`}
     >
       <Text
         style={[

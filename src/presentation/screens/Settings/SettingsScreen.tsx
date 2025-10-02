@@ -146,7 +146,10 @@ export const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfacePrimary }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.surfacePrimary }]}
+      testID="settings-screen"
+    >
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Профили настроек */}
         <SettingsSection

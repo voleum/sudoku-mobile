@@ -298,7 +298,10 @@ export const GameScreen: React.FC = () => {
   const isSmallScreen = screenHeight < 700;
 
   return (
-    <SafeAreaView style={[styles.container, isZenMode && styles.zenContainer]}>
+    <SafeAreaView
+      style={[styles.container, isZenMode && styles.zenContainer]}
+      testID="game-screen"
+    >
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
@@ -346,7 +349,7 @@ export const GameScreen: React.FC = () => {
               cellNotes={cellNotes}
               onCellPress={handleCellPress}
               onCellLongPress={handleCellLongPress}
-              testID="game-sudoku-board"
+              testID="sudoku-board"
             />
           </View>
 

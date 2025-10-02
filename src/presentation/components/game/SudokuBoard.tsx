@@ -126,7 +126,7 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = memo(({
         onPress={onCellPress}
         onLongPress={onCellLongPress}
         disabled={disabled}
-        testID={`${testID || 'sudoku-board'}-cell-${row}-${col}`}
+        testID={`sudoku-cell-${row}-${col}`}
       />
     );
   }, [
@@ -138,8 +138,7 @@ export const SudokuBoard: React.FC<SudokuBoardProps> = memo(({
     cellSize,
     onCellPress,
     onCellLongPress,
-    disabled,
-    testID
+    disabled
   ]);
 
   // Рендеринг блока 3x3

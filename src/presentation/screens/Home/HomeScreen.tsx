@@ -113,7 +113,10 @@ export const HomeScreen: React.FC = () => {
   const dailyTip = getDailyTip();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.surfacePrimary }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.surfacePrimary }]}
+      testID="home-screen"
+    >
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}

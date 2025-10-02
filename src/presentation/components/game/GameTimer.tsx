@@ -80,7 +80,7 @@ export const GameTimer: React.FC<GameTimerProps> = memo(({
   };
 
   return (
-    <View style={styles.container} testID={testID || 'game-timer'}>
+    <View style={styles.container} testID={testID || 'game-timer-container'}>
       {/* Таймер */}
       <View style={styles.timeContainer}>
         <Text style={styles.timeLabel} allowFontScaling={true}>
@@ -93,7 +93,7 @@ export const GameTimer: React.FC<GameTimerProps> = memo(({
           ]}
           allowFontScaling={true}
           accessibilityLabel={`Время игры: ${formatTime(displayTime)}`}
-          testID={`${testID || 'game-timer'}-time`}
+          testID="game-timer"
         >
           {formatTime(displayTime)}
         </Text>
@@ -111,7 +111,7 @@ export const GameTimer: React.FC<GameTimerProps> = memo(({
           style={styles.movesValue}
           allowFontScaling={true}
           accessibilityLabel={`Количество ходов: ${movesCount}`}
-          testID={`${testID || 'game-timer'}-moves`}
+          testID="moves-counter"
         >
           {movesCount}
         </Text>
