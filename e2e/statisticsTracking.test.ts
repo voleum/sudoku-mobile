@@ -58,7 +58,7 @@ describe('Statistics Tracking Flow', () => {
       await waitFor(element(by.id('statistics-screen'))).toBeVisible().withTimeout(3000);
 
       // Проверяем начальное состояние
-      await detoxExpect(element(by.id('total-games-count'))).toBeVisible();
+      await detoxExpect(element(by.id('total-games-stat'))).toBeVisible();
 
       // Возвращаемся на главный экран
       await element(by.id('back-button')).tap();
@@ -79,7 +79,7 @@ describe('Statistics Tracking Flow', () => {
       await waitFor(element(by.id('statistics-screen'))).toBeVisible().withTimeout(3000);
 
       // Статистика должна обновиться
-      await detoxExpect(element(by.id('total-games-count'))).toBeVisible();
+      await detoxExpect(element(by.id('total-games-stat'))).toBeVisible();
     });
 
     it('should track win rate percentage', async () => {
@@ -90,7 +90,7 @@ describe('Statistics Tracking Flow', () => {
         .withTimeout(3000);
 
       // Проверяем отображение процента побед
-      await detoxExpect(element(by.id('win-rate-percentage'))).toBeVisible();
+      await detoxExpect(element(by.id('win-rate-stat'))).toBeVisible();
     });
 
     it('should track best time for each difficulty', async () => {

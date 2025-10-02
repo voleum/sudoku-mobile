@@ -99,7 +99,7 @@ export const GameControls: React.FC<GameControlsProps> = memo(({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID={testID || 'game-controls'}>
       {/* Первый ряд: Заметки и Подсказка */}
       <View style={styles.row}>
         {renderControlButton(

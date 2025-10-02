@@ -80,7 +80,7 @@ export const GameTimer: React.FC<GameTimerProps> = memo(({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID={testID || 'game-timer-container'}>
       {/* Таймер */}
       <View style={styles.timeContainer}>
         <Text style={styles.timeLabel} allowFontScaling={true}>
