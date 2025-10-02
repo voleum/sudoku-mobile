@@ -1,0 +1,51 @@
+# Android Gradle Properties Example
+# Скопируйте этот файл в gradle.properties и заполните своими значениями
+# ВАЖНО: gradle.properties НЕ должен попадать в git (уже добавлен в .gitignore)
+
+# Project-wide Gradle settings.
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+android.useAndroidX=true
+
+# Automatically convert third-party libraries to use AndroidX
+android.enableJetifier=true
+
+# React Native New Architecture
+newArchEnabled=false
+
+# Use Hermes JS engine
+hermesEnabled=true
+
+# ============================================================================
+# Release Signing Configuration
+# ============================================================================
+
+# Параметры для подписи релизной сборки
+# Создайте keystore с помощью команды:
+# keytool -genkeypair -v -storetype PKCS12 -keystore sudoku-release.keystore \
+#   -alias sudoku-key-alias -keyalg RSA -keysize 2048 -validity 10000
+
+# Путь к release keystore (относительно android/app/)
+SUDOKU_RELEASE_STORE_FILE=sudoku-release.keystore
+
+# Alias ключа в keystore
+SUDOKU_RELEASE_KEY_ALIAS=sudoku-key-alias
+
+# Пароль для keystore
+# ЗАМЕНИТЕ на ваш реальный пароль!
+SUDOKU_RELEASE_STORE_PASSWORD=your_store_password_here
+
+# Пароль для ключа
+# ЗАМЕНИТЕ на ваш реальный пароль!
+SUDOKU_RELEASE_KEY_PASSWORD=your_key_password_here
+
+# ============================================================================
+# ВАЖНО: БЕЗОПАСНОСТЬ
+# ============================================================================
+#
+# 1. НЕ КОММИТЬТЕ файл gradle.properties с реальными паролями в Git!
+# 2. Храните пароли в безопасном месте (password manager)
+# 3. Для CI/CD используйте environment variables или secrets
+# 4. Храните keystore файл в безопасном месте (backup!)
+# 5. Если потеряете keystore, не сможете обновить приложение в Google Play!
+#
+# ============================================================================
